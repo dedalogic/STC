@@ -4,6 +4,8 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
 <title>Caja SF</title>
+<link rel="icon" type="image/png" href="icon.png"/>
+<link rel="apple-touch-icon" href="icon.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -366,6 +368,7 @@ canvas#sigC{display:block;width:100%;height:100px;cursor:crosshair;touch-action:
 @keyframes ti{from{opacity:0;transform:translateX(-50%) translateY(5px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 @keyframes to{to{opacity:0}}
 svg{display:block}
+@media print{#pdfPrint>div:first-child{display:none!important}}
 </style>
 </head>
 <body>
@@ -572,6 +575,17 @@ function saveDay(){
   persist();toast('Conteo del día guardado');
 }
 
+function openWA(msg){
+  const encoded=encodeURIComponent(msg);
+  // On mobile use native whatsapp:// scheme; on desktop use web
+  const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if(isMobile){
+    window.location.href='whatsapp://send?text='+encoded;
+  } else {
+    window.open('https://web.whatsapp.com/send?text='+encoded,'_blank');
+  }
+}
+
 // Build WA message for stock
 function waStock(){
   const now=new Date();
@@ -582,7 +596,7 @@ function waStock(){
   if(crit.length){msg+=`CRÍTICO (${crit.length})\n`;crit.forEach(p=>{msg+=`• ${p.n}: ${S.counts[p.id]??0} / mín ${p.mw}\n`});msg+='\n';}
   if(low.length){msg+=`BAJO (${low.length})\n`;low.forEach(p=>{msg+=`• ${p.n}: ${S.counts[p.id]??0} / mín ${p.mw}\n`});msg+='\n';}
   msg+=`Contados: ${Object.keys(S.counts).length}/${PRODUCTS.length}`;
-  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+  openWA(msg);
 }
 
 // Build WA message for checklist
@@ -605,7 +619,7 @@ function waChecklist(mode){
     });
     msg+='\n';
   });
-  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+  openWA(msg);
 }
 
 // PDF
@@ -680,8 +694,37 @@ async function doPDF(mode){
   ${body}${sigHTML}
   <div class="footer">Caja SF · ${d}</div>
   </body></html>`;
-  const w=window.open('','_blank');w.document.write(html);w.document.close();
-  w.onload=()=>w.print();toast('PDF listo');
+  // Inject a printable overlay instead of opening a new window
+  let pDiv=document.getElementById('pdfPrint');
+  if(pDiv)pDiv.remove();
+  pDiv=document.createElement('div');
+  pDiv.id='pdfPrint';
+  pDiv.style.cssText='position:fixed;inset:0;background:white;z-index:9999;overflow:auto;padding:0';
+  pDiv.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#f0f2f7;border-bottom:1px solid #dde0ea;position:sticky;top:0;z-index:1">
+      <span style="font-size:13px;font-weight:600;font-family:Inter,sans-serif">Vista previa — Checklist ${modeLabel}</span>
+      <div style="display:flex;gap:8px">
+        <button onclick="window.print()" style="padding:7px 14px;background:#0d0d0d;color:white;border:none;border-radius:7px;font-family:Inter,sans-serif;font-size:12px;font-weight:600;cursor:pointer">Imprimir / PDF</button>
+        <button onclick="document.getElementById('pdfPrint').remove()" style="padding:7px 14px;background:#eceef4;color:#3f4354;border:none;border-radius:7px;font-family:Inter,sans-serif;font-size:12px;font-weight:600;cursor:pointer">Cerrar</button>
+      </div>
+    </div>
+    <div style="max-width:680px;margin:0 auto;padding:24px 20px;font-family:Arial,sans-serif;font-size:12px;color:#0d0d0d">
+      ${html.match(/<body>([\s\S]*?)<\/body>/)?.[1]||body}
+    </div>`;
+  // Build clean print content
+  pDiv.querySelector('div:last-child').innerHTML=`
+    <h1 style="font-size:18px;font-weight:800;margin-bottom:3px">Checklist ${modeLabel} — Caja SF</h1>
+    <div style="font-size:11px;color:#7e8299;margin-bottom:4px">${d} · ${t}</div>
+    ${S.clName?`<div style="font-size:13px;font-weight:700;margin-bottom:8px">${S.clName}</div>`:''}
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+      <div style="flex:1;height:6px;background:#eceef4;border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:#e8325a;border-radius:3px"></div></div>
+      <span style="font-size:12px;font-weight:700;color:#e8325a">${done}/${allItems.length} · ${pct}%</span>
+    </div>
+    ${body}
+    ${S.sig?`<div style="margin-top:20px;padding-top:14px;border-top:1.5px solid #eceef4"><div style="font-size:10px;font-weight:700;color:#7e8299;text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">Firma del responsable</div><img src="${S.sig}" style="max-width:200px;border:1px solid #dde0ea;border-radius:5px"/></div>`:''}
+    <div style="margin-top:20px;font-size:10px;color:#b8bccb;text-align:center;border-top:1px solid #eceef4;padding-top:10px">Caja SF · ${d}</div>`;
+  document.body.appendChild(pDiv);
+  toast('Vista previa lista');
 }
 
 // ── GUIDE STEPS ──────────────────────────────────────────────
@@ -799,13 +842,15 @@ function rFinish(){
   const nL=PRODUCTS.filter(p=>sts(p.id)==='low').length;
   const d=new Date().toLocaleDateString('es-CL',{day:'numeric',month:'short'});
   const t=new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
-  return`<div class="ob-overlay" id="finOverlay" style="align-items:center;justify-content:center">
-    <div style="background:var(--white);border-radius:14px;padding:20px;width:280px;text-align:center">
-      <div style="font-size:14px;font-weight:700;margin-bottom:4px">Conteo finalizado</div>
-      <div style="font-size:12px;color:var(--g4);margin-bottom:16px">${cnt} productos · ${d} ${t}${nC>0?`<br><span style="color:var(--red);font-weight:600">${nC} crítico${nC>1?'s':''}</span>`:''}${nL>0?` · ${nL} bajo${nL>1?'s':''}`:''}</div>
-      <button class="ob-btn" id="finWA" style="margin-bottom:8px">${I.wa} Enviar por WhatsApp</button>
-      <button class="ob-btn" id="finSave" style="background:var(--black);">${I.save} Guardar en historial</button>
-      <button id="finClose" style="display:block;margin:10px auto 0;font-size:12px;color:var(--g4);background:none;border:none;cursor:pointer;font-family:var(--fn)">Cerrar</button>
+  return`<div class="ob-overlay" id="finOverlay">
+    <div style="background:var(--white);border-radius:14px;padding:18px 18px 16px;width:270px;text-align:center">
+      <div style="font-size:13px;font-weight:700;margin-bottom:3px">Conteo finalizado</div>
+      <div style="font-size:11px;color:var(--g4);margin-bottom:14px">${cnt} productos · ${d} ${t}${nC>0?` · <span style="color:var(--red);font-weight:600">${nC} crítico${nC>1?'s':''}</span>`:''}${nL>0?` · ${nL} bajo${nL>1?'s':''}`:''}</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button id="finSave" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:var(--black);color:white;border:none;border-radius:9px;font-family:var(--fn);font-size:12px;font-weight:600;cursor:pointer"><span style="width:14px;height:14px;flex-shrink:0">${I.save}</span>Guardar</button>
+        <button id="finWA" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:#25d366;color:white;border:none;border-radius:9px;font-family:var(--fn);font-size:12px;font-weight:600;cursor:pointer"><span style="width:14px;height:14px;flex-shrink:0">${I.wa}</span>WhatsApp</button>
+      </div>
+      <button id="finClose" style="font-size:11px;color:var(--g4);background:none;border:none;cursor:pointer;font-family:var(--fn)">Cerrar</button>
     </div>
   </div>`;
 }
