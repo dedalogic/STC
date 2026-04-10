@@ -302,6 +302,62 @@ canvas#sigC{display:block;width:100%;height:100px;cursor:crosshair;touch-action:
 .np.on .ni svg{color:var(--pink)}
 .np.on .nl{color:var(--pink)}
 
+/* ONBOARDING */
+.ob-overlay{position:fixed;inset:0;background:rgba(10,10,10,.35);backdrop-filter:blur(2px);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.ob-sheet{width:100%;max-width:360px;background:var(--white);border-radius:16px;padding:22px 20px 24px;text-align:center}
+.ob-title{font-size:15px;font-weight:700;margin-bottom:6px}
+.ob-sub{font-size:13px;color:var(--g4);margin-bottom:16px;line-height:1.5}
+.ob-name-inp{width:100%;background:var(--g1);border:1.5px solid var(--g2);border-radius:9px;padding:11px 13px;font-family:var(--fn);font-size:14px;font-weight:500;color:var(--black);outline:none;margin-bottom:12px;transition:border-color .2s;text-align:left}
+.ob-name-inp:focus{border-color:var(--pink)}
+.ob-name-inp::placeholder{color:var(--g3)}
+.ob-btn{width:100%;padding:12px;background:var(--pink);color:var(--white);border:none;border-radius:9px;font-family:var(--fn);font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.ob-btn:active{opacity:.85}
+
+/* HEADER ICON BUTTONS */
+.hdr-actions{display:flex;align-items:center;gap:6px}
+.hbtn{width:30px;height:30px;background:var(--g1);border:none;border-radius:8px;color:var(--g5);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0}
+.hbtn svg{width:15px;height:15px}
+.hbtn:active{background:var(--g2)}
+.hbtn.alert-dot{position:relative}
+.hbtn.alert-dot::after{content:'';position:absolute;top:5px;right:5px;width:6px;height:6px;background:var(--red);border-radius:50%;border:1.5px solid var(--white)}
+
+/* GUIDE OVERLAY */
+.guide-overlay{position:fixed;inset:0;z-index:400;pointer-events:none}
+.guide-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.3);pointer-events:all}
+.guide-card{position:absolute;left:50%;margin-left:-130px;width:260px;bottom:100px;background:var(--white);border-radius:12px;padding:11px 13px;box-shadow:0 4px 20px rgba(0,0,0,.18);pointer-events:all;animation:fadeIn .2s ease}
+.guide-card h4{font-size:13px;font-weight:700;margin-bottom:3px}
+.guide-card p{font-size:12px;color:var(--g4);line-height:1.4;margin-bottom:10px}
+.guide-card-btns{display:flex;gap:6px}
+.guide-card-btns button{flex:1;padding:7px;border:none;border-radius:7px;font-family:var(--fn);font-size:11px;font-weight:600;cursor:pointer}
+.guide-next{background:var(--pink);color:white}
+.guide-skip{background:var(--g1);color:var(--g5)}
+.guide-step-num{font-size:10px;font-weight:600;color:var(--g3);margin-bottom:5px;letter-spacing:.3px}
+
+/* MENU DRAWER */
+.menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:300;animation:fadeIn .2s ease}
+.menu-drawer{position:absolute;top:0;right:0;width:240px;height:100%;background:var(--white);box-shadow:-4px 0 24px rgba(0,0,0,.1);padding:52px 0 28px;display:flex;flex-direction:column}
+.menu-item{display:flex;align-items:center;gap:12px;padding:13px 20px;font-size:13px;font-weight:500;color:var(--black);cursor:pointer;transition:background .12s;border:none;background:none;font-family:var(--fn);width:100%;text-align:left}
+.menu-item:active{background:var(--g1)}
+.menu-item svg{width:16px;height:16px;color:var(--g4);flex-shrink:0}
+.menu-sep{height:1px;background:var(--g2);margin:6px 0}
+.menu-user{padding:16px 20px 10px;font-size:12px;color:var(--g4);font-weight:500}
+.menu-user strong{display:block;font-size:14px;color:var(--black);font-weight:700;margin-bottom:2px}
+
+/* TIPS CARD */
+.tips-card{background:linear-gradient(135deg,#fefce8,var(--white));border:1px solid #e5e0a0;border-radius:var(--r);padding:13px 14px;margin-bottom:9px}
+.tips-card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.tips-card-hd h3{font-size:13px;font-weight:700}
+.tips-card-dismiss{font-size:10px;color:var(--g4);background:none;border:1px solid var(--g2);border-radius:6px;padding:3px 9px;cursor:pointer;font-family:var(--fn)}
+.tip-item{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-top:1px solid rgba(0,0,0,.05);font-size:12px;color:var(--g5);line-height:1.5}
+.tip-item:first-of-type{border-top:none}
+.tip-item svg{width:13px;height:13px;color:#b45309;flex-shrink:0;margin-top:1px}
+
+/* STOCK FINISH BUTTON */
+.stock-finish{background:var(--black);color:var(--white);border:none;border-radius:var(--r);padding:14px 18px;margin-top:14px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--fn);font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s,transform .12s}
+.stock-finish svg{width:15px;height:15px}
+.stock-finish:active{opacity:.85;transform:scale(.98)}
+
 /* MISC */
 .empty{text-align:center;padding:50px 20px;color:var(--g4)}
 .empty svg{width:32px;height:32px;opacity:.2;margin:0 auto 10px;display:block}
@@ -314,7 +370,7 @@ svg{display:block}
 </head>
 <body>
 <div id="root"></div>
-<script type="module">
+<script>
 
 const I={
   search:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
@@ -336,6 +392,12 @@ const I={
   sun:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`,
   moon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
   import2:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 8 12 3 17 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
+  bulb:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg>`,
+  user2:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  menu2:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`,
+  refresh:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.71"/></svg>`,
+  logout:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
+  info2:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
 };
 
 // ── PRODUCTS (alphabetical within each category) ──────────────
@@ -432,7 +494,6 @@ const CL_CIERRE=[
       {id:'c01',text:'Limpiar sillas y mesas de terraza antes de guardar.',photo:false},
       {id:'c02',text:'Guardar quitasoles y apilar mesas en la entrada.',photo:false},
       {id:'c03',text:'Barrer todo el local nuevamente.',photo:false},
-      {id:'c04',text:'Vaciar bidón de residuos del Schop.',photo:false},
       {id:'c05',text:'Trapear pisos finales.',photo:true},
     ]
   },
@@ -451,12 +512,13 @@ const CL_CIERRE=[
 
 // ── STATE ─────────────────────────────────────────────────────
 function loadS(){
-  try{const s=localStorage.getItem('cajasf_v9');if(s)return JSON.parse(s);}catch(e){}
+  try{const s=localStorage.getItem('cajasf_v11');if(s)return JSON.parse(s);}catch(e){}
   return{counts:{},prov:{},desc:{},collapsed:{},history:[],
-         clMode:'apertura',clName:'',clDone:{},clPhotos:{},clCollapsed:{},sig:null};
+         clMode:'apertura',clName:'',clDone:{},clPhotos:{},clCollapsed:{},sig:null,
+         onboarded:false,hideTips:false};
 }
 let S=loadS();
-function persist(){localStorage.setItem('cajasf_v9',JSON.stringify(S))}
+function persist(){localStorage.setItem('cajasf_v11',JSON.stringify(S))}
 
 function sts(id){
   const p=PRODUCTS.find(x=>x.id===id);if(!p)return'none';
@@ -470,6 +532,8 @@ const SL={crit:'Crítico',low:'Bajo',ok:'OK',none:'—'};
 const SCHI={crit:'chip-r',low:'chip-a',ok:'chip-g'};
 
 let tab='stock',expanded=null,search='',toastMsg=null,sf={};
+let obStep=0, guideStep=-1, showMenu=false, showMenuNameEdit=false;
+const OB_NAME_KEY='_obname';
 function toast(m){toastMsg=m;render();setTimeout(()=>{toastMsg=null;render();},2100)}
 function todayStr(){return new Date().toISOString().split('T')[0]}
 function fmtD(d){return new Date(d+'T12:00').toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'})}
@@ -617,6 +681,16 @@ async function doPDF(mode){
   w.onload=()=>w.print();toast('PDF listo');
 }
 
+// ── GUIDE STEPS ──────────────────────────────────────────────
+const GUIDE=[
+  {title:'Stock de insumos',text:'Aquí ves todos tus productos agrupados por categoría. Toca cada uno para contar cuántos hay.',tab:'stock',pos:'top'},
+  {title:'Contar un producto',text:'Usa − y + para ajustar la cantidad. El punto cambia de color según el nivel de stock.',tab:'stock',pos:'mid'},
+  {title:'Detalle del producto',text:'Toca el nombre del producto para ver el mínimo semanal, proveedor y notas.',tab:'stock',pos:'mid'},
+  {title:'Checklist de turno',text:'Aquí están las tareas de apertura y cierre. Márcalas una por una al realizarlas.',tab:'check',pos:'top'},
+  {title:'Fotografías',text:'Algunas tareas requieren foto como evidencia. Toca "Agregar foto" para tomarla.',tab:'check',pos:'mid'},
+  {title:'Exportar y enviar',text:'Al terminar el conteo guárdalo o envíalo por WhatsApp. También puedes exportar el checklist en PDF.',tab:'exp',pos:'top'},
+];
+
 // ── RENDER ─────────────────────────────────────────────────────
 function render(){
   const nCrit=PRODUCTS.filter(p=>sts(p.id)==='crit').length;
@@ -626,11 +700,23 @@ function render(){
   const clDone=allCL.filter(i=>S.clDone[i.id]).length;
   const d=new Date().toLocaleDateString('es-CL',{day:'numeric',month:'short'});
 
+  // If guide is active, switch tab to match step
+  if(guideStep>=0&&guideStep<GUIDE.length){
+    const gt=GUIDE[guideStep].tab;
+    if(tab!==gt){tab=gt;}
+  }
+
   document.getElementById('root').innerHTML=`
+    ${!S.onboarded?rOnboarding():''}
+    ${showMenu?rMenu():''}
+    ${guideStep>=0&&guideStep<GUIDE.length?rGuide(nCrit):''}
     <div class="hdr">
       <div class="hdr-top">
         <div class="logo">Street <em>Flags</em></div>
-        <div class="${nCrit>0?'hdr-pill crit':'hdr-pill'}">${nCrit>0?`${nCrit} crítico${nCrit>1?'s':''}`:d}</div>
+        <div class="hdr-actions">
+          <button class="hbtn${nCrit>0?' alert-dot':''}" id="hBulb" title="Guía rápida">${I.bulb}</button>
+          <button class="hbtn" id="hMenu">${I.menu2}</button>
+        </div>
       </div>
       <div class="tabs">
         <button class="tab${tab==='stock'?' on':''}" data-tab="stock">Stock</button>
@@ -652,6 +738,55 @@ function render(){
     ${toastMsg?`<div class="toast">${toastMsg}</div>`:''}
   `;
   bind();
+}
+
+function rOnboarding(){
+  const canNext=(S.clName||'').trim().length>0;
+  return`<div class="ob-overlay" id="obOverlay">
+    <div class="ob-sheet">
+      <div class="ob-title">Bienvenida</div>
+      <div class="ob-sub">Aquí podrás contar tu stock y marcar el checklist de caja. Escribe tu nombre para continuar.</div>
+      <input class="ob-name-inp" id="obName" type="text" placeholder="Tu nombre…" value="${(S.clName||'').replace(/"/g,'&quot;')}" autocomplete="given-name"/>
+      <button class="ob-btn" id="obNext"${!canNext?' disabled style="opacity:.4"':''}>Entrar</button>
+    </div>
+  </div>`;
+}
+
+function rGuide(nCrit){
+  const step=GUIDE[guideStep];
+  const isLast=guideStep===GUIDE.length-1;
+  return`<div class="guide-overlay">
+    <div class="guide-backdrop" id="guideBack"></div>
+    <div class="guide-card" style="bottom:110px">
+      <div class="guide-step-num">Consejo ${guideStep+1} de ${GUIDE.length}</div>
+      <h4>${step.title}</h4>
+      <p>${step.text}</p>
+      <div class="guide-card-btns">
+        <button class="guide-skip" id="guideSkip">Cerrar</button>
+        <button class="guide-next" id="guideNext">${isLast?'Listo':'Siguiente →'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function rMenu(){
+  const name=S.clName||'Cajera';
+  return`<div class="menu-overlay" id="menuOverlay">
+    <div class="menu-drawer">
+      <div class="menu-user"><strong>${name}</strong>Street Flags</div>
+      <div class="menu-sep"></div>
+      <button class="menu-item" id="menuGuide">${I.bulb} Activar guía rápida</button>
+      <button class="menu-item" id="menuUser">${I.user2} Cambiar nombre</button>
+      <button class="menu-item" id="menuReset">${I.refresh} Reiniciar conteo</button>
+      <div class="menu-sep"></div>
+      <button class="menu-item" id="menuClose" style="justify-content:center;font-weight:700;color:var(--g4)">✕</button>
+    </div>
+    ${showMenuNameEdit?`<div style="position:absolute;bottom:0;left:0;right:0;background:var(--white);padding:16px 20px 28px;border-top:1px solid var(--g2)">
+      <div style="font-size:11px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Cambiar nombre</div>
+      <input id="menuNameInp" type="text" value="${name.replace(/"/g,'&quot;')}" style="width:100%;background:var(--g1);border:1.5px solid var(--g2);border-radius:8px;padding:10px 12px;font-family:var(--fn);font-size:14px;color:var(--black);outline:none;margin-bottom:8px" autocomplete="given-name"/>
+      <button id="menuNameSave" style="width:100%;padding:11px;background:var(--pink);color:white;border:none;border-radius:8px;font-family:var(--fn);font-size:13px;font-weight:700;cursor:pointer">Guardar</button>
+    </div>`:''}
+  </div>`;
 }
 
 function rStock(nCrit){
@@ -681,8 +816,9 @@ function rStock(nCrit){
       ${open?`<div class="cat-body">${prods.map(p=>rRow(p,cat.bg)).join('')}</div>`:''}
     </div>`;
   });
-  return h;
+  return h + `<button class="stock-finish" id="stockFinish">${I.save} Finalizar conteo</button>`;
 }
+
 
 function rRow(p,bg){
   const s=sts(p.id),cnt=S.counts[p.id]??0,isExp=expanded===p.id,fl=sf[p.id];
@@ -713,22 +849,24 @@ function rDet(p,fl){
 
 function rChecklist(mode,clDone,clTotal,secs){
   const pct=clTotal?Math.round(clDone/clTotal*100):0;
+  const name=S.clName||'';
+  const isAp=mode==='apertura';
 
   let h=`
     <div class="cl-toggle">
-      <button class="cl-tog-btn${mode==='apertura'?' on':''}" data-mode="apertura">Apertura</button>
-      <button class="cl-tog-btn${mode==='cierre'?' on':''}" data-mode="cierre">Cierre</button>
+      <button class="cl-tog-btn${isAp?' on':''}" data-mode="apertura" style="${isAp?'background:#1d6fa8;color:white':''}">Apertura</button>
+      <button class="cl-tog-btn${!isAp?' on':''}" data-mode="cierre" style="${!isAp?'background:#6b21a8;color:white':''}">Cierre</button>
     </div>
     <div class="cl-name-wrap">
-      <label>Nombre del responsable</label>
-      <input class="cl-name-inp" id="clName" type="text" placeholder="Tu nombre completo…" value="${(S.clName||'').replace(/"/g,'&quot;')}"/>
+      <label>Responsable del turno</label>
+      <input class="cl-name-inp" id="clName" type="text" placeholder="Tu nombre…" value="${name.replace(/"/g,'&quot;')}"/>
     </div>
     <div class="cl-prog">
       <div class="cl-prog-row">
         <span class="cl-prog-txt">${clDone} de ${clTotal} tareas</span>
         <span class="cl-prog-pct">${pct}%${clDone>0?`&nbsp;<button style="font-size:10px;color:var(--g4);background:none;border:1px solid var(--g2);border-radius:6px;padding:2px 8px;cursor:pointer;font-family:var(--fn)" id="clReset">Reiniciar</button>`:''}</span>
       </div>
-      <div class="cl-track"><div class="cl-fill" style="width:${pct}%"></div></div>
+      <div class="cl-track"><div class="cl-fill" style="width:${pct}%;background:${isAp?'#1d6fa8':'#6b21a8'}"></div></div>
     </div>`;
 
   secs.forEach((sec,idx)=>{
@@ -789,7 +927,7 @@ function rClItem(item){
 }
 
 function rHist(){
-  if(!S.history.length)return`<div class="empty">${I.clock}<p>Sin historial.<br>Guarda el conteo desde Exportar.</p></div>`;
+  if(!S.history.length)return`<div class="empty"><div style="width:32px;height:32px;opacity:.2;margin:0 auto 10px">${I.clock}</div><p>Sin historial.<br>Guarda el conteo desde Exportar.</p></div>`;
   return S.history.slice(0,14).map(e=>{
     const items=Object.entries(e.counts);if(!items.length)return'';
     const nc=items.filter(([id,c])=>{const p=PRODUCTS.find(x=>x.id==id);return p&&c<p.mw}).length;
@@ -802,37 +940,34 @@ function rHist(){
 
 function rExp(nCrit){
   const cnt=Object.keys(S.counts).length,nLow=PRODUCTS.filter(p=>sts(p.id)==='low').length;
-  const alert=[...PRODUCTS.filter(p=>sts(p.id)==='crit'),...PRODUCTS.filter(p=>sts(p.id)==='low')].slice(0,6);
+  const alert=[...PRODUCTS.filter(p=>sts(p.id)==='crit'),...PRODUCTS.filter(p=>sts(p.id)==='low')].slice(0,5);
   const mode=S.clMode||'apertura';
   const allCL=(mode==='apertura'?CL_APERTURA:CL_CIERRE).flatMap(s=>s.items);
   const clDone=allCL.filter(i=>S.clDone[i.id]).length;
   const now=new Date();
-  const d=now.toLocaleDateString('es-CL',{day:'numeric',month:'long'});
+  const d=now.toLocaleDateString('es-CL',{day:'numeric',month:'short'});
   const t=now.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
   return`
   <div class="ecard">
-    <h3>Stock</h3>
-    <p>${cnt} de ${PRODUCTS.length} productos · ${nCrit} crítico${nCrit!==1?'s':''}, ${nLow} bajo${nLow!==1?'s':''} · ${d} ${t}</p>
+    <h3>Stock · ${d} ${t}</h3>
+    <p>${cnt}/${PRODUCTS.length} contados${nCrit>0?` · <span style="color:var(--red);font-weight:600">${nCrit} crítico${nCrit>1?'s':''}</span>`:''}${nLow>0?` · ${nLow} bajo${nLow>1?'s':''}`:''}.</p>
     ${alert.length?`<div class="crit-tbl">
       <div class="ctrow hd"><span>Producto</span><span>Stock</span><span>Mín</span><span>Estado</span></div>
       ${alert.map(p=>{const s=sts(p.id);return`<div class="ctrow"><span class="nm">${p.n}</span><span style="font-weight:700;color:${SC[s]}">${S.counts[p.id]??0}</span><span style="color:var(--g4)">${p.mw}</span><span class="chip ${SCHI[s]||''}">${SL[s]}</span></div>`;}).join('')}
-      ${nCrit+nLow>6?`<div style="text-align:center;padding:6px;font-size:11px;color:var(--g4)">+${nCrit+nLow-6} más en el Excel</div>`:''}
+      ${nCrit+nLow>5?`<div style="text-align:center;padding:5px;font-size:11px;color:var(--g4)">+${nCrit+nLow-5} más</div>`:''}
     </div>`:''}
     <button class="btn btn-black" id="bSave">${I.save} Guardar conteo del día</button>
     <button class="btn btn-black" id="bExcel">${I.excel} Exportar Excel</button>
     <button class="btn btn-wa" id="bWA">${I.wa} Enviar por WhatsApp</button>
-    <div style="margin-top:7px;border-top:1px solid var(--g2);padding-top:10px">
-      <p style="font-size:11px;color:var(--g4);margin-bottom:7px">Importar conteo desde archivo Excel exportado anteriormente:</p>
-      <label class="btn btn-outline" style="cursor:pointer">
-        ${I.import2} Importar conteo (.xlsx)
-        <input type="file" accept=".xlsx" id="importFile" style="display:none"/>
-      </label>
-    </div>
+    <label class="btn btn-outline" style="cursor:pointer;margin-top:2px">
+      ${I.import2} Importar conteo (.xlsx)
+      <input type="file" accept=".xlsx" id="importFile" style="display:none"/>
+    </label>
   </div>
   <div class="ecard">
-    <h3>Checklist del turno</h3>
-    <p>${clDone} de ${allCL.length} tareas del ${mode}. Exporta el informe con fotos y firma.</p>
-    <button class="btn btn-pink" id="bPDF">${I.pdf} Exportar PDF del checklist</button>
+    <h3>Checklist · ${mode}</h3>
+    <p>${clDone}/${allCL.length} tareas completadas.</p>
+    <button class="btn btn-pink" id="bPDF">${I.pdf} Exportar PDF</button>
   </div>`;
 }
 
@@ -876,9 +1011,62 @@ function updC(id,val){
   document.querySelectorAll(`[data-c="${id}"]`).forEach(el=>{el.value=S.counts[id];el.className=`cval${S.counts[id]===0?' z':''}`;});
 }
 function bind(){
-  document.querySelectorAll('[data-tab]').forEach(el=>el.addEventListener('click',()=>{tab=el.dataset.tab;search='';render()}));
+  // onboarding
+  const obNext=document.getElementById('obNext');
+  if(obNext)obNext.addEventListener('click',()=>{
+    const n=document.getElementById('obName');
+    if(n){S.clName=n.value.trim();persist();}
+    if(!S.clName)return;
+    S.onboarded=true;persist();render();
+    setTimeout(maybeStartGuide,400);
+  });
+  const obName=document.getElementById('obName');
+  if(obName){
+    obName.addEventListener('input',e=>{
+      S.clName=e.target.value;persist();
+      const btn=document.getElementById('obNext');
+      if(btn){btn.disabled=!e.target.value.trim();btn.style.opacity=e.target.value.trim()?'1':'.4';}
+    });
+  }
+
+  // guide
+  const gNext=document.getElementById('guideNext');
+  if(gNext)gNext.addEventListener('click',()=>guideNext());
+  const gSkip=document.getElementById('guideSkip');
+  if(gSkip)gSkip.addEventListener('click',()=>{guideStep=-1;render()});
+  const gBack=document.getElementById('guideBack');
+  if(gBack)gBack.addEventListener('click',()=>{guideStep=-1;render()});
+
+  // header buttons
+  const hBulb=document.getElementById('hBulb');
+  if(hBulb)hBulb.addEventListener('click',()=>{guideStep=0;render()});
+  const hMenu=document.getElementById('hMenu');
+  if(hMenu)hMenu.addEventListener('click',()=>{showMenu=true;render()});
+
+  // menu drawer
+  const menuOverlay=document.getElementById('menuOverlay');
+  if(menuOverlay)menuOverlay.addEventListener('click',e=>{if(e.target===menuOverlay){showMenu=false;showMenuNameEdit=false;render()}});
+  const menuClose=document.getElementById('menuClose');
+  if(menuClose)menuClose.addEventListener('click',()=>{showMenu=false;showMenuNameEdit=false;render()});
+  const menuGuide=document.getElementById('menuGuide');
+  if(menuGuide)menuGuide.addEventListener('click',()=>{showMenu=false;showMenuNameEdit=false;guideStep=0;render()});
+  const menuUser=document.getElementById('menuUser');
+  if(menuUser)menuUser.addEventListener('click',()=>{showMenuNameEdit=!showMenuNameEdit;render();const inp=document.getElementById('menuNameInp');if(inp)inp.focus()});
+  const menuNameSave=document.getElementById('menuNameSave');
+  if(menuNameSave)menuNameSave.addEventListener('click',()=>{const inp=document.getElementById('menuNameInp');if(inp&&inp.value.trim()){S.clName=inp.value.trim();persist();showMenuNameEdit=false;render();toast('Nombre actualizado')}});
+  const menuNameInp=document.getElementById('menuNameInp');
+  if(menuNameInp)menuNameInp.addEventListener('keydown',e=>{if(e.key==='Enter'){const v=e.target.value.trim();if(v){S.clName=v;persist();showMenuNameEdit=false;render();toast('Nombre actualizado')}}});
+  const menuReset=document.getElementById('menuReset');
+  if(menuReset)menuReset.addEventListener('click',()=>{if(confirm('¿Reiniciar todo el conteo?')){S.counts={};persist();showMenu=false;showMenuNameEdit=false;toast('Conteo reiniciado');render()}});
+
+  // tabs
+  document.querySelectorAll('[data-tab]').forEach(el=>el.addEventListener('click',()=>{tab=el.dataset.tab;search='';render();maybeStartGuide()}));
+
+  // search
   const si=document.getElementById('si');
   if(si){si.addEventListener('input',e=>{search=e.target.value;render();const n=document.getElementById('si');if(n){n.focus();const l=n.value.length;n.setSelectionRange(l,l)}});si.addEventListener('click',e=>e.stopPropagation())}
+
+  // stock
   document.querySelectorAll('[data-col]').forEach(el=>el.addEventListener('click',()=>{S.collapsed[el.dataset.col]=!S.collapsed[el.dataset.col];render()}));
   document.querySelectorAll('[data-exp]').forEach(el=>el.addEventListener('click',e=>{if(e.target.closest('[data-c],[data-dec],[data-inc],[data-f],[data-sv]'))return;const id=+el.dataset.exp;expanded=expanded===id?null:id;render()}));
   document.querySelectorAll('[data-dec]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();updC(+b.dataset.dec,(S.counts[+b.dataset.dec]??0)-1)}));
@@ -887,29 +1075,34 @@ function bind(){
   document.querySelectorAll('[data-f]').forEach(inp=>{inp.addEventListener('change',e=>{const pid=+inp.dataset.pid;if(inp.dataset.f==='prov')S.prov[pid]=e.target.value;else S.desc[pid]=e.target.value;persist()});inp.addEventListener('click',e=>e.stopPropagation())});
   document.querySelectorAll('[data-sv]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const pid=+b.dataset.sv;sf[pid]=true;persist();render();setTimeout(()=>{delete sf[pid];render()},1400)}));
 
-  // checklist mode toggle
+  // finish stock button
+  const stFin=document.getElementById('stockFinish');
+  if(stFin)stFin.addEventListener('click',saveDay);
+
+  // checklist
   document.querySelectorAll('[data-mode]').forEach(el=>el.addEventListener('click',()=>{S.clMode=el.dataset.mode;persist();render()}));
-  // cl name
   const cln=document.getElementById('clName');if(cln){cln.addEventListener('input',e=>{S.clName=e.target.value;persist()});}
-  // cl section collapse
   document.querySelectorAll('[data-cls]').forEach(el=>el.addEventListener('click',()=>{S.clCollapsed[el.dataset.cls]=!S.clCollapsed[el.dataset.cls];render()}));
-  // cl check
   document.querySelectorAll('[data-clck]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();S.clDone[el.dataset.clck]=!S.clDone[el.dataset.clck];persist();render()}));
-  // cl reset
   const clr=document.getElementById('clReset');if(clr)clr.addEventListener('click',()=>{S.clDone={};S.clPhotos={};S.sig=null;persist();render()});
-  // photo upload
+
+  // photos
   document.querySelectorAll('[data-upl]').forEach(inp=>inp.addEventListener('change',e=>{const id=inp.dataset.upl,file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{if(!S.clPhotos[id])S.clPhotos[id]=[];S.clPhotos[id].push(ev.target.result);persist();render()};r.readAsDataURL(file)}));
-  // photo delete
   document.querySelectorAll('[data-dph]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const id=btn.dataset.dph,idx=+btn.dataset.idx;if(S.clPhotos[id]){S.clPhotos[id].splice(idx,1);if(!S.clPhotos[id].length)delete S.clPhotos[id]}persist();render()}));
+
   // signature
   initSig();
   const sc=document.getElementById('sigClr');if(sc)sc.addEventListener('click',()=>{const c=document.getElementById('sigC');if(c&&sigCtx){sigCtx.clearRect(0,0,c.width,c.height);c.closest('.sig-box').classList.remove('drawn');S.sig=null;persist();render()}});
   const ss=document.getElementById('sigSv');if(ss)ss.addEventListener('click',()=>{const c=document.getElementById('sigC');if(c){S.sig=c.toDataURL();persist();toast('Firma guardada');render()}});
-  // finalizar = WA
-  const fin=document.getElementById('clFinish');if(fin)fin.addEventListener('click',()=>{const mode=S.clMode||'apertura';waChecklist(mode)});
+  const fin=document.getElementById('clFinish');if(fin)fin.addEventListener('click',()=>{waChecklist(S.clMode||'apertura')});
+
+  // tips dismiss
+  const td=document.getElementById('tipsDismiss');if(td)td.addEventListener('click',()=>{S.hideTips=true;persist();render()});
+
   // import
   const imp=document.getElementById('importFile');
   if(imp)imp.addEventListener('change',e=>{const f=e.target.files[0];if(f)importXLSX(f)});
+
   // export
   const bSave=document.getElementById('bSave');if(bSave)bSave.addEventListener('click',saveDay);
   const bExcel=document.getElementById('bExcel');if(bExcel)bExcel.addEventListener('click',doExcel);
@@ -917,7 +1110,45 @@ function bind(){
   const bPDF=document.getElementById('bPDF');if(bPDF)bPDF.addEventListener('click',()=>doPDF(S.clMode||'apertura'));
 }
 
+// ── AUTO-GUIDE ────────────────────────────────────────────────
+// Each tab shows its tips once, one at a time
+// Stock: steps 0-2 (after 4s delay), Check: 3-4 (immediately), Exp: 5 (immediately)
+const GUIDE_TAB = {stock:[0,1,2], check:[3,4], exp:[5]};
+let guideSeen = {stock:false, check:false, exp:false};
+let stockDelayTimer = null;
+
+function maybeStartGuide(){
+  if(!S.onboarded||guideStep>=0)return;
+  if(tab==='stock'&&!guideSeen.stock){
+    // wait 4s before showing stock tips
+    if(stockDelayTimer)clearTimeout(stockDelayTimer);
+    stockDelayTimer=setTimeout(()=>{
+      if(!guideSeen.stock&&guideStep<0&&tab==='stock'){
+        guideSeen.stock=true;guideStep=0;render();
+      }
+    },4000);
+  }
+  if(tab==='check'&&!guideSeen.check){
+    guideSeen.check=true;
+    setTimeout(()=>{if(guideStep<0){guideStep=3;render();}},500);
+  }
+  if(tab==='exp'&&!guideSeen.exp){
+    guideSeen.exp=true;
+    setTimeout(()=>{if(guideStep<0){guideStep=5;render();}},300);
+  }
+}
+
+// When guide advances, stop at end of current tab's steps
+function guideNext(){
+  const key=tab==='stock'?'stock':tab==='check'?'check':'exp';
+  const steps=GUIDE_TAB[key]||[];
+  const nextStep=guideStep+1;
+  if(steps.includes(nextStep)){guideStep=nextStep;render();}
+  else{guideStep=-1;render();}
+}
+
 render();
+setTimeout(()=>{if(S.onboarded)maybeStartGuide();},400);
 </script>
 </body>
 </html>
