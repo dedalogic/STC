@@ -8,6 +8,7 @@
 <link rel="apple-touch-icon" href="icon.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
   --white:#fff;--black:#0d0d0d;
@@ -623,42 +624,143 @@ function waChecklist(mode){
 }
 
 // PDF
-function buildPDFHTML(mode){
-  const secs=mode==='apertura'?CL_APERTURA:CL_CIERRE;
-  const allItems=secs.flatMap(s=>s.items);
-  const done=allItems.filter(i=>S.clDone[i.id]).length;
-  const now=new Date();
-  const d=now.toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  const t=now.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
-  const modeLabel=mode==='apertura'?'Apertura':'Cierre';
-  const pct=allItems.length?Math.round(done/allItems.length*100):0;
-  let body='';
-  for(let si=0;si<secs.length;si++){
-    const sec=secs[si];
-    const secDone=sec.items.filter(i=>S.clDone[i.id]).length;
-    let rows='';
-    for(const item of sec.items){
-      const ok=!!S.clDone[item.id];
-      const photos=S.clPhotos[item.id]||[];
-      const phtml=photos.length?'<div class="photos">'+photos.map(ph=>'<img src="'+ph+'"/>').join('')+'</div>':'';
-      rows+='<div class="item'+(ok?' done':'')+'"><div class="chk'+(ok?' ok':'')+'">'+( ok?'&#10003;':'' )+'</div><div class="itext"><div class="ilbl">'+item.text+'</div>'+phtml+'</div></div>';
-    }
-    body+='<div class="sec"><div class="shd"><div class="snum">'+(si+1)+'</div><span class="stit">'+sec.title+'</span><span class="spg">'+secDone+'/'+sec.items.length+'</span></div>'+rows+'</div>';
+async function buildPDF(mode){
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({unit:'mm',format:'a4'});
+  const secs = mode==='apertura'?CL_APERTURA:CL_CIERRE;
+  const allItems = secs.flatMap(s=>s.items);
+  const done = allItems.filter(i=>S.clDone[i.id]).length;
+  const now = new Date();
+  const d = now.toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'});
+  const t = now.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+  const modeLabel = mode==='apertura'?'APERTURA':'CIERRE';
+  const pageW = 210, pageH = 297, margin = 14, colW = pageW - margin*2;
+  let y = 0;
+
+  function checkPage(needed){
+    if(y + needed > pageH - 14){doc.addPage();y = 14;}
   }
-  const sigHTML=S.sig?'<div class="sig"><div class="siglbl">Firma</div><img src="'+S.sig+'" class="sigimg"/></div>':'';
-  const css='*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:12px;color:#111;background:#fff;padding:24px 28px;max-width:680px;margin:0 auto}h1{font-size:17px;font-weight:800;margin-bottom:2px}.sub{font-size:11px;color:#888;margin-bottom:2px}.resp{font-size:16px;font-weight:700;margin-bottom:10px}.badge{display:inline-block;background:#111;color:#fef9c3;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:3px;margin-bottom:5px}.prow{display:flex;align-items:center;gap:8px;margin-bottom:18px}.pbg{flex:1;height:4px;background:#eee;border-radius:2px;overflow:hidden}.pfill{height:100%;background:#e8325a;border-radius:2px}.ptxt{font-size:10px;font-weight:700;color:#e8325a;white-space:nowrap}.sec{margin-bottom:12px;border:1px solid #e5e0a0;border-radius:6px;overflow:hidden;page-break-inside:avoid}.shd{display:flex;align-items:center;gap:7px;background:#fef9c3;padding:6px 10px;border-bottom:1px solid #e5e0a0}.snum{width:16px;height:16px;background:#111;color:#fef9c3;border-radius:3px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}.stit{font-size:11px;font-weight:700;flex:1}.spg{font-size:10px;color:#7a7040}.item{display:flex;align-items:flex-start;gap:7px;padding:6px 10px;border-bottom:1px solid #f5f0cc;background:#fefce8}.item:last-child{border-bottom:none}.item.done{background:#f0fdf4}.chk{width:15px;height:15px;border-radius:3px;border:1.5px solid #b0a860;background:transparent;font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}.chk.ok{background:#059669;border-color:#059669}.itext{flex:1}.ilbl{font-size:11px;line-height:1.5;color:#111}.item.done .ilbl{color:#888}.photos{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}.photos img{width:80px;height:60px;object-fit:cover;border-radius:3px;border:1px solid #e9e4aa}.sig{margin-top:18px;padding-top:10px;border-top:1px solid #eee}.siglbl{font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}.sigimg{max-width:160px;border:1px solid #dde;border-radius:3px;display:block}.footer{margin-top:16px;font-size:9px;color:#bbb;text-align:center;border-top:1px solid #eee;padding-top:7px}@media print{@page{margin:10mm}body{padding:0}}';
-  return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/><title>Checklist '+modeLabel+' — Caja SF</title><style>'+css+'</style></head><body><div class="badge">'+modeLabel+'</div><h1>Checklist Caja SF</h1><div class="sub">'+d+' · '+t+'</div>'+(S.clName?'<div class="resp">'+S.clName+'</div>':'')+'<div class="prow"><div class="pbg"><div class="pfill" style="width:'+pct+'%"></div></div><span class="ptxt">'+done+'/'+allItems.length+' · '+pct+'%</span></div>'+body+sigHTML+'<div class="footer">Caja SF · '+d+'</div></body></html>';
+
+  // ── HEADER ──
+  doc.setFillColor(232,50,90);
+  doc.rect(0,0,pageW,22,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(14);doc.setFont('helvetica','bold');
+  doc.text('Street Flags — Checklist '+modeLabel, pageW/2, 14, {align:'center'});
+  y = 30;
+
+  // ── META ──
+  doc.setTextColor(80,80,80);doc.setFontSize(9);doc.setFont('helvetica','normal');
+  doc.text(d+' · '+t, margin, y);
+  y += 5;
+  if(S.clName){
+    doc.setTextColor(20,20,20);doc.setFontSize(12);doc.setFont('helvetica','bold');
+    doc.text(S.clName, margin, y);
+    y += 6;
+  }
+
+  // ── PROGRESS ──
+  doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(80,80,80);
+  const pct = allItems.length?Math.round(done/allItems.length*100):0;
+  doc.text(done+'/'+allItems.length+' tareas · '+pct+'%', margin, y);
+  // bar
+  doc.setFillColor(238,238,238);doc.roundedRect(margin+36, y-3.5, colW-36, 3.5, 1, 1,'F');
+  doc.setFillColor(232,50,90);doc.roundedRect(margin+36, y-3.5, Math.max(1,(colW-36)*pct/100), 3.5, 1, 1,'F');
+  y += 8;
+
+  // ── SECTIONS ──
+  for(let si=0;si<secs.length;si++){
+    const sec = secs[si];
+    checkPage(12);
+    // Section header
+    doc.setFillColor(254,249,195);
+    doc.roundedRect(margin, y, colW, 8, 1, 1,'F');
+    doc.setDrawColor(229,224,160);doc.setLineWidth(0.3);
+    doc.roundedRect(margin, y, colW, 8, 1, 1,'D');
+    // Number badge
+    doc.setFillColor(17,17,17);
+    doc.roundedRect(margin+2, y+1.5, 5, 5, 0.8, 0.8,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(7);doc.setFont('helvetica','bold');
+    doc.text(String(si+1), margin+4.5, y+5.3, {align:'center'});
+    // Title
+    doc.setTextColor(17,17,17);doc.setFontSize(9);doc.setFont('helvetica','bold');
+    doc.text(sec.title, margin+10, y+5.3);
+    // Done count
+    const secDone = sec.items.filter(i=>S.clDone[i.id]).length;
+    doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(100,100,60);
+    doc.text(secDone+'/'+sec.items.length, margin+colW-2, y+5.3, {align:'right'});
+    y += 9;
+
+    for(const item of sec.items){
+      const ok = !!S.clDone[item.id];
+      const photos = S.clPhotos[item.id]||[];
+      const lines = doc.splitTextToSize(item.text, colW-12);
+      const rowH = Math.max(8, lines.length*4.5 + (photos.length?22:0) + 2);
+      checkPage(rowH);
+      // Row bg
+      doc.setFillColor(ok?240:254, ok?253:252, ok?244:232);
+      doc.rect(margin, y, colW, rowH,'F');
+      doc.setDrawColor(245,240,204);doc.setLineWidth(0.2);
+      doc.line(margin, y+rowH, margin+colW, y+rowH);
+      // Checkbox
+      if(ok){
+        doc.setFillColor(5,150,105);
+        doc.roundedRect(margin+2, y+2, 4.5, 4.5, 0.8, 0.8,'F');
+        doc.setTextColor(255,255,255);doc.setFontSize(8);doc.setFont('helvetica','bold');
+        doc.text('\u2713', margin+4.25, y+5.8, {align:'center'});
+      } else {
+        doc.setDrawColor(176,168,96);doc.setLineWidth(0.4);
+        doc.roundedRect(margin+2, y+2, 4.5, 4.5, 0.8, 0.8,'D');
+      }
+      // Text
+      doc.setTextColor(ok?150:17, ok?150:17, ok?150:17);
+      doc.setFontSize(9);doc.setFont('helvetica','normal');
+      doc.text(lines, margin+9, y+5.5);
+      // Photos
+      if(photos.length){
+        let px = margin+9;
+        const py = y + lines.length*4.5 + 2;
+        for(const ph of photos.slice(0,4)){
+          try{doc.addImage(ph,'JPEG',px,py,18,14);}catch(e){}
+          px += 20;
+          if(px > margin+colW-20) break;
+        }
+      }
+      y += rowH;
+    }
+    y += 3;
+  }
+
+  // ── FIRMA ──
+  if(S.sig){
+    checkPage(30);
+    y += 2;
+    doc.setDrawColor(220,220,220);doc.setLineWidth(0.3);
+    doc.line(margin, y, margin+colW, y);
+    y += 5;
+    doc.setTextColor(100,100,100);doc.setFontSize(8);doc.setFont('helvetica','bold');
+    doc.text('FIRMA', margin, y);
+    y += 3;
+    try{doc.addImage(S.sig,'PNG',margin,y,40,16);}catch(e){}
+    y += 18;
+  }
+
+  // ── FOOTER ──
+  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(180,180,180);
+  doc.text('Caja SF · Street Flags · '+d, pageW/2, pageH-6, {align:'center'});
+
+  return doc;
 }
 
-function doPDF(mode){
-  const html=buildPDFHTML(mode);
-  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.target='_blank';a.rel='noopener';
-  document.body.appendChild(a);a.click();
-  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},2000);
+async function doPDF(mode){
+  if(!window.jspdf){toast('Cargando librería PDF…');return;}
+  try{
+    const doc = await buildPDF(mode||S.clMode||'apertura');
+    const fname = 'checklist-'+(mode||S.clMode||'apertura')+'-'+new Date().toISOString().split('T')[0]+'.pdf';
+    doc.save(fname);
+  }catch(e){console.error(e);toast('Error generando PDF');}
 }
+
 
 
 // ── GUIDE STEPS ──────────────────────────────────────────────
@@ -1128,21 +1230,21 @@ function bind(){
     persist();
     // Generate PDF HTML
     const mode=S.clMode||'apertura';
-    const html=buildPDFHTML(mode);
-    // Open in new window and auto-print → user saves as PDF, then shares
-    const w=window.open('','_blank');
-    if(w){
-      w.document.open();w.document.write(html);w.document.close();
-      w.onload=()=>{w.focus();w.print();};
-    } else {
-      // Fallback: blob download
-      const blob=new Blob([html],{type:'text/html;charset=utf-8'});
-      const url=URL.createObjectURL(blob);
-      const a=document.createElement('a');
-      a.href=url;a.download='checklist-'+mode+'.html';
-      document.body.appendChild(a);a.click();
-      setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
-    }
+    if(!window.jspdf){toast('Cargando PDF…');return;}
+    try{
+      const doc=await buildPDF(mode);
+      const fname='checklist-'+mode+'-'+new Date().toISOString().split('T')[0]+'.pdf';
+      const pdfBlob=doc.output('blob');
+      const file=new File([pdfBlob],fname,{type:'application/pdf'});
+      // Try native share with PDF file (works on iOS/Android Chrome)
+      if(navigator.canShare&&navigator.canShare({files:[file]})){
+        try{await navigator.share({files:[file],title:'Checklist Caja SF '+mode});return;}
+        catch(e){if(e.name==='AbortError')return;}
+      }
+      // Fallback: download
+      doc.save(fname);
+      toast('PDF descargado — compártelo desde tus archivos');
+    }catch(e){console.error(e);toast('Error al generar PDF');}
   });
 
   // tips dismiss
