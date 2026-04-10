@@ -1214,7 +1214,22 @@ function bind(){
   const clr=document.getElementById('clReset');if(clr)clr.addEventListener('click',()=>{S.clDone={};S.clPhotos={};S.sig=null;persist();render()});
 
   // photos
-  document.querySelectorAll('[data-upl]').forEach(inp=>inp.addEventListener('change',e=>{const id=inp.dataset.upl,file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{if(!S.clPhotos[id])S.clPhotos[id]=[];S.clPhotos[id].push(ev.target.result);persist();render()};r.readAsDataURL(file)}));
+  document.querySelectorAll('[data-upl]').forEach(inp=>inp.addEventListener('change',e=>{
+    const id=inp.dataset.upl,file=e.target.files[0];if(!file)return;
+    // Save current sig to S before render destroys the canvas
+    const cv=document.getElementById('sigC');
+    if(cv&&!S.sig){
+      const ctx2=cv.getContext('2d');
+      if(ctx2){const px=ctx2.getImageData(0,0,cv.width,cv.height).data;if(px.some((v,i)=>i%4===3&&v>0))S.sig=cv.toDataURL();}
+    }
+    const r=new FileReader();
+    r.onload=ev=>{
+      if(!S.clPhotos[id])S.clPhotos[id]=[];
+      S.clPhotos[id].push(ev.target.result);
+      persist();render();
+    };
+    r.readAsDataURL(file);
+  }));
   document.querySelectorAll('[data-dph]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const id=btn.dataset.dph,idx=+btn.dataset.idx;if(S.clPhotos[id]){S.clPhotos[id].splice(idx,1);if(!S.clPhotos[id].length)delete S.clPhotos[id]}persist();render()}));
 
   // signature
@@ -1227,31 +1242,33 @@ function bind(){
   });
   const fin=document.getElementById('clFinish');
   if(fin)fin.addEventListener('click',async()=>{
-    // Auto-capture signature if canvas has content
+    toast('Generando PDF…');
+    // Capture sig from canvas only if user drew new strokes (not yet in S.sig)
     const c=document.getElementById('sigC');
-    if(c&&sigCtx){
-      const px=sigCtx.getImageData(0,0,c.width,c.height).data;
-      const hasStrokes=Array.from(px).some((v,i)=>i%4===3&&v>0);
-      if(hasStrokes)S.sig=c.toDataURL();
+    if(c){
+      const ctx=c.getContext('2d');
+      if(ctx){
+        const px=ctx.getImageData(0,0,c.width,c.height).data;
+        const hasStrokes=px.some((v,i)=>i%4===3&&v>0);
+        if(hasStrokes){S.sig=c.toDataURL();persist();}
+      }
     }
-    persist();
-    // Generate PDF HTML
+    // Small delay to ensure FileReader callbacks for any pending photos have settled
+    await new Promise(r=>setTimeout(r,150));
     const mode=S.clMode||'apertura';
-    if(!window.jspdf){toast('Cargando PDF…');return;}
+    if(!window.jspdf){toast('Librería PDF no cargada aún, intenta de nuevo');return;}
     try{
       const doc=await buildPDF(mode);
       const fname='checklist-'+mode+'-'+new Date().toISOString().split('T')[0]+'.pdf';
       const pdfBlob=doc.output('blob');
       const file=new File([pdfBlob],fname,{type:'application/pdf'});
-      // Try native share with PDF file (works on iOS/Android Chrome)
       if(navigator.canShare&&navigator.canShare({files:[file]})){
         try{await navigator.share({files:[file],title:'Checklist Caja SF '+mode});return;}
         catch(e){if(e.name==='AbortError')return;}
       }
-      // Fallback: download
       doc.save(fname);
-      toast('PDF descargado — compártelo desde tus archivos');
-    }catch(e){console.error(e);toast('Error al generar PDF');}
+      toast('PDF descargado — compártelo desde Archivos');
+    }catch(e){console.error(e);toast('Error: '+e.message);}
   });
 
   // tips dismiss
