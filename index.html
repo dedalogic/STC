@@ -633,66 +633,72 @@ function doPDF(mode){
   const modeLabel=mode==='apertura'?'Apertura':'Cierre';
   const pct=allItems.length?Math.round(done/allItems.length*100):0;
 
-  // Build section HTML with inline styles only
   let body='';
   for(let si=0;si<secs.length;si++){
     const sec=secs[si];
     const secDone=sec.items.filter(i=>S.clDone[i.id]).length;
-    body+=`<div style="margin-bottom:14px;border:1px solid #e5e0a0;border-radius:7px;overflow:hidden">
-      <div style="display:flex;align-items:center;gap:8px;background:#fef9c3;padding:7px 10px;border-bottom:1px solid #e5e0a0">
-        <div style="width:18px;height:18px;background:#0d0d0d;color:#fef9c3;border-radius:4px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${si+1}</div>
-        <span style="font-size:12px;font-weight:700;color:#1a1a0a;flex:1">${sec.title}</span>
-        <span style="font-size:10px;color:#7a7040">${secDone}/${sec.items.length}</span>
-      </div>`;
+    let items='';
     for(const item of sec.items){
-      const isDone=!!S.clDone[item.id];
+      const ok=!!S.clDone[item.id];
       const photos=S.clPhotos[item.id]||[];
-      body+=`<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 10px;border-bottom:1px solid #f5f0cc;background:#fefce8">
-        <div style="width:14px;height:14px;border-radius:3px;border:1.5px solid ${isDone?'#059669':'#b0a860'};background:${isDone?'#059669':'transparent'};color:white;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">${isDone?'✓':''}</div>
-        <div style="flex:1">
-          <div style="font-size:12px;line-height:1.5;color:${isDone?'#9ca3af':'#1a1a0a'};${isDone?'text-decoration:line-through':''}">${item.text}</div>
-          ${photos.length?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">${photos.map(ph=>`<img src="${ph}" style="width:80px;height:60px;object-fit:cover;border-radius:4px;border:1px solid #e9e4aa"/>`).join('')}</div>`:''}
-        </div>
-      </div>`;
+      const photoHTML=photos.length?`<div class="photos">${photos.map(ph=>`<img src="${ph}"/>`).join('')}</div>`:'';
+      items+=`<div class="item${ok?' done':''}"><div class="chk${ok?' ok':''}">${ok?'&#10003;':''}</div><div class="itext"><div class="ilbl">${item.text}</div>${photoHTML}</div></div>`;
     }
-    body+='</div>';
+    body+=`<div class="sec"><div class="shd"><div class="snum">${si+1}</div><span class="stit">${sec.title}</span><span class="spg">${secDone}/${sec.items.length}</span></div>${items}</div>`;
   }
 
-  const sigHTML=S.sig?`<div style="margin-top:18px;padding-top:12px;border-top:1.5px solid #eceef4">
-    <div style="font-size:10px;font-weight:700;color:#7e8299;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Firma del responsable</div>
-    <img src="${S.sig}" style="max-width:180px;border:1px solid #dde0ea;border-radius:4px;display:block"/>
-  </div>`:'';
+  const sigHTML=S.sig?`<div class="sig"><div class="siglbl">Firma</div><img src="${S.sig}" class="sigimg"/></div>`:'';
 
-  const content=`
-    <h1 style="font-size:17px;font-weight:800;margin-bottom:3px;font-family:Arial,sans-serif">Checklist ${modeLabel} — Caja SF</h1>
-    <div style="font-size:11px;color:#7e8299;margin-bottom:3px;font-family:Arial,sans-serif">${d} · ${t}</div>
-    ${S.clName?`<div style="font-size:13px;font-weight:700;margin-bottom:10px;font-family:Arial,sans-serif">${S.clName}</div>`:'<div style="margin-bottom:10px"></div>'}
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
-      <div style="flex:1;height:5px;background:#eceef4;border-radius:3px;overflow:hidden">
-        <div style="height:100%;width:${pct}%;background:#e8325a;border-radius:3px"></div>
-      </div>
-      <span style="font-size:11px;font-weight:700;color:#e8325a;white-space:nowrap;font-family:Arial,sans-serif">${done}/${allItems.length} · ${pct}%</span>
-    </div>
-    ${body}${sigHTML}
-    <div style="margin-top:18px;font-size:10px;color:#b8bccb;text-align:center;border-top:1px solid #eceef4;padding-top:8px;font-family:Arial,sans-serif">Caja SF · ${d}</div>`;
+  const html=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/>
+<title>Checklist ${modeLabel} — Caja SF</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#111;background:#fff;padding:24px 28px;max-width:680px;margin:0 auto}
+h1{font-size:17px;font-weight:800;margin-bottom:2px}
+.sub{font-size:11px;color:#888;margin-bottom:2px}
+.resp{font-size:12px;font-weight:700;margin-bottom:10px}
+.badge{display:inline-block;background:#111;color:#fef9c3;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:3px;margin-bottom:5px}
+.prow{display:flex;align-items:center;gap:8px;margin-bottom:18px}
+.pbg{flex:1;height:4px;background:#eee;border-radius:2px;overflow:hidden}
+.pfill{height:100%;background:#e8325a;border-radius:2px}
+.ptxt{font-size:10px;font-weight:700;color:#e8325a;white-space:nowrap}
+.sec{margin-bottom:12px;border:1px solid #e5e0a0;border-radius:6px;overflow:hidden;page-break-inside:avoid}
+.shd{display:flex;align-items:center;gap:7px;background:#fef9c3;padding:6px 10px;border-bottom:1px solid #e5e0a0}
+.snum{width:16px;height:16px;background:#111;color:#fef9c3;border-radius:3px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stit{font-size:11px;font-weight:700;flex:1}
+.spg{font-size:10px;color:#7a7040}
+.item{display:flex;align-items:flex-start;gap:7px;padding:6px 10px;border-bottom:1px solid #f5f0cc;background:#fefce8}
+.item:last-child{border-bottom:none}
+.item.done{background:#f0fdf4}
+.chk{width:12px;height:12px;border-radius:2px;border:1.5px solid #b0a860;background:transparent;font-size:8px;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.chk.ok{background:#059669;border-color:#059669}
+.itext{flex:1}
+.ilbl{font-size:11px;line-height:1.5;color:#111}
+.item.done .ilbl{color:#aaa;text-decoration:line-through}
+.photos{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.photos img{width:80px;height:60px;object-fit:cover;border-radius:3px;border:1px solid #e9e4aa}
+.sig{margin-top:18px;padding-top:10px;border-top:1px solid #eee}
+.siglbl{font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.sigimg{max-width:160px;border:1px solid #dde;border-radius:3px;display:block}
+.footer{margin-top:16px;font-size:9px;color:#bbb;text-align:center;border-top:1px solid #eee;padding-top:7px}
+@media print{@page{margin:10mm}body{padding:0}}
+</style></head><body>
+<div class="badge">${modeLabel}</div>
+<h1>Checklist Caja SF</h1>
+<div class="sub">${d} · ${t}</div>
+${S.clName?`<div class="resp">${S.clName}</div>`:''}
+<div class="prow"><div class="pbg"><div class="pfill" style="width:${pct}%"></div></div><span class="ptxt">${done}/${allItems.length} · ${pct}%</span></div>
+${body}${sigHTML}
+<div class="footer">Caja SF · ${d}</div>
+<script>window.onload=function(){setTimeout(function(){window.print();},300);}<\/script>
+</body></html>`;
 
-  // Inject overlay
-  let pDiv=document.getElementById('pdfPrint');
-  if(pDiv)pDiv.remove();
-  pDiv=document.createElement('div');
-  pDiv.id='pdfPrint';
-  pDiv.style.cssText='position:fixed;inset:0;background:white;z-index:9999;overflow:auto';
-  pDiv.innerHTML=`
-    <div id="pdfBar" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f0f2f7;border-bottom:1px solid #dde0ea;position:sticky;top:0">
-      <span style="font-size:12px;font-weight:600;font-family:Inter,sans-serif;color:#3f4354">Checklist ${modeLabel}</span>
-      <div style="display:flex;gap:6px">
-        <button onclick="window.print()" style="padding:6px 12px;background:#0d0d0d;color:white;border:none;border-radius:7px;font-family:Inter,sans-serif;font-size:11px;font-weight:600;cursor:pointer">Imprimir / PDF</button>
-        <button onclick="document.getElementById('pdfPrint').remove()" style="padding:6px 12px;background:#eceef4;color:#3f4354;border:none;border-radius:7px;font-family:Inter,sans-serif;font-size:11px;font-weight:600;cursor:pointer">✕ Cerrar</button>
-      </div>
-    </div>
-    <div style="max-width:600px;margin:0 auto;padding:20px 16px">${content}</div>`;
-  document.body.appendChild(pDiv);
-  toast('Vista previa lista');
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.target='_blank';a.rel='noopener';
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},2000);
 }
 
 // ── GUIDE STEPS ──────────────────────────────────────────────
@@ -926,19 +932,18 @@ function rChecklist(mode,clDone,clTotal,secs){
 
   h+=`<div class="sig-card">
     <h3>Firma del responsable</h3>
-    <p>Firma para confirmar que se completaron las tareas del turno.</p>
     <div class="sig-box${S.sig?' drawn':''}">
       <canvas id="sigC" width="600" height="200"></canvas>
     </div>
     <div class="sig-row">
       <button class="btn btn-outline" id="sigClr" style="flex:1;margin:0">${I.erase} Limpiar</button>
-      <button class="btn btn-black" id="sigSv" style="flex:1;margin:0">${S.sig?`${I.check} Guardada`:` ${I.pen} Guardar firma`}</button>
+      <button class="btn btn-black" id="sigSv" style="flex:1;margin:0">${S.sig?`${I.check} Guardada`:`${I.pen} Guardar`}</button>
     </div>
   </div>
-  <div class="cl-finish" id="clFinish">
+  <div class="cl-finish" id="clFinish" style="margin-top:12px">
     <div class="cl-finish-text">
-      <h3>Finalizar ${mode==='apertura'?'apertura':'cierre'}</h3>
-      <p>Enviar resumen por WhatsApp</p>
+      <h3>Finalizar y enviar</h3>
+      <p>WhatsApp · <span id="clPDFlink" style="text-decoration:underline;cursor:pointer;opacity:.8">ver PDF</span></p>
     </div>
     <div class="cl-finish-icon">${I.send}</div>
   </div>`;
@@ -1152,6 +1157,8 @@ function bind(){
   const sc=document.getElementById('sigClr');if(sc)sc.addEventListener('click',()=>{const c=document.getElementById('sigC');if(c&&sigCtx){sigCtx.clearRect(0,0,c.width,c.height);c.closest('.sig-box').classList.remove('drawn');S.sig=null;persist();render()}});
   const ss=document.getElementById('sigSv');if(ss)ss.addEventListener('click',()=>{const c=document.getElementById('sigC');if(c){S.sig=c.toDataURL();persist();toast('Firma guardada');render()}});
   const fin=document.getElementById('clFinish');if(fin)fin.addEventListener('click',()=>{waChecklist(S.clMode||'apertura')});
+  const clPDFlink=document.getElementById('clPDFlink');
+  if(clPDFlink)clPDFlink.addEventListener('click',e=>{e.stopPropagation();doPDF(S.clMode||'apertura')});
 
   // tips dismiss
   const td=document.getElementById('tipsDismiss');if(td)td.addEventListener('click',()=>{S.hideTips=true;persist();render()});
