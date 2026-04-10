@@ -515,7 +515,7 @@ function loadS(){
   try{const s=localStorage.getItem('cajasf_v11');if(s)return JSON.parse(s);}catch(e){}
   return{counts:{},prov:{},desc:{},collapsed:{},history:[],
          clMode:'apertura',clName:'',clDone:{},clPhotos:{},clCollapsed:{},sig:null,
-         onboarded:false,hideTips:false};
+         onboarded:false,hideTips:false,guideSeen:{stock:false,check:false,exp:false}};
 }
 let S=loadS();
 function persist(){localStorage.setItem('cajasf_v11',JSON.stringify(S))}
@@ -1045,7 +1045,7 @@ function bind(){
     if(n){S.clName=n.value.trim();persist();}
     if(!S.clName)return;
     S.onboarded=true;persist();
-    guideSeen.stock=true;guideStep=0;render();
+    S.guideSeen.stock=true;persist();guideStep=0;render();
   });
   const obName=document.getElementById('obName');
   if(obName){
@@ -1057,7 +1057,7 @@ function bind(){
     obName.addEventListener('keydown',e=>{
       if(e.key==='Enter'&&S.clName.trim()){
         S.onboarded=true;persist();
-        guideSeen.stock=true;guideStep=0;render();
+        S.guideSeen.stock=true;persist();guideStep=0;render();
       }
     });
   }
@@ -1072,7 +1072,7 @@ function bind(){
 
   // header buttons
   const hBulb=document.getElementById('hBulb');
-  if(hBulb)hBulb.addEventListener('click',()=>{guideStep=0;render()});
+  if(hBulb)hBulb.addEventListener('click',()=>{S.guideSeen={stock:false,check:false,exp:false};persist();guideStep=0;render()});
   const hMenu=document.getElementById('hMenu');
   if(hMenu)hMenu.addEventListener('click',()=>{showMenu=true;render()});
 
@@ -1082,7 +1082,7 @@ function bind(){
   const menuClose=document.getElementById('menuClose');
   if(menuClose)menuClose.addEventListener('click',()=>{showMenu=false;showMenuNameEdit=false;render()});
   const menuGuide=document.getElementById('menuGuide');
-  if(menuGuide)menuGuide.addEventListener('click',()=>{showMenu=false;showMenuNameEdit=false;guideStep=0;render()});
+  if(menuGuide)menuGuide.addEventListener('click',()=>{S.guideSeen={stock:false,check:false,exp:false};persist();showMenu=false;showMenuNameEdit=false;guideStep=0;render()});
   const menuUser=document.getElementById('menuUser');
   if(menuUser)menuUser.addEventListener('click',()=>{showMenuNameEdit=!showMenuNameEdit;render();const inp=document.getElementById('menuNameInp');if(inp)inp.focus()});
   const menuNameSave=document.getElementById('menuNameSave');
@@ -1158,26 +1158,27 @@ function bind(){
 // Each tab shows its tips once, one at a time
 // Stock: steps 0-2 (after 4s delay), Check: 3-4 (immediately), Exp: 5 (immediately)
 const GUIDE_TAB = {stock:[0,1,2], check:[3,4], exp:[5]};
-let guideSeen = {stock:false, check:false, exp:false};
 let stockDelayTimer = null;
+
+// Ensure guideSeen exists on old state
+if(!S.guideSeen)S.guideSeen={stock:false,check:false,exp:false};
 
 function maybeStartGuide(){
   if(!S.onboarded||guideStep>=0)return;
-  if(tab==='stock'&&!guideSeen.stock){
-    // wait 4s before showing stock tips
+  if(tab==='stock'&&!S.guideSeen.stock){
     if(stockDelayTimer)clearTimeout(stockDelayTimer);
     stockDelayTimer=setTimeout(()=>{
-      if(!guideSeen.stock&&guideStep<0&&tab==='stock'){
-        guideSeen.stock=true;guideStep=0;render();
+      if(!S.guideSeen.stock&&guideStep<0&&tab==='stock'){
+        S.guideSeen.stock=true;persist();guideStep=0;render();
       }
     },4000);
   }
-  if(tab==='check'&&!guideSeen.check){
-    guideSeen.check=true;
+  if(tab==='check'&&!S.guideSeen.check){
+    S.guideSeen.check=true;persist();
     setTimeout(()=>{if(guideStep<0){guideStep=3;render();}},500);
   }
-  if(tab==='exp'&&!guideSeen.exp){
-    guideSeen.exp=true;
+  if(tab==='exp'&&!S.guideSeen.exp){
+    S.guideSeen.exp=true;persist();
     setTimeout(()=>{if(guideStep<0){guideStep=5;render();}},300);
   }
 }
