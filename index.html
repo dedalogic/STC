@@ -646,7 +646,7 @@ function buildPDFHTML(mode){
     body+='<div class="sec"><div class="shd"><div class="snum">'+(si+1)+'</div><span class="stit">'+sec.title+'</span><span class="spg">'+secDone+'/'+sec.items.length+'</span></div>'+rows+'</div>';
   }
   const sigHTML=S.sig?'<div class="sig"><div class="siglbl">Firma</div><img src="'+S.sig+'" class="sigimg"/></div>':'';
-  const css='*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:12px;color:#111;background:#fff;padding:24px 28px;max-width:680px;margin:0 auto}h1{font-size:17px;font-weight:800;margin-bottom:2px}.sub{font-size:11px;color:#888;margin-bottom:2px}.resp{font-size:12px;font-weight:700;margin-bottom:10px}.badge{display:inline-block;background:#111;color:#fef9c3;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:3px;margin-bottom:5px}.prow{display:flex;align-items:center;gap:8px;margin-bottom:18px}.pbg{flex:1;height:4px;background:#eee;border-radius:2px;overflow:hidden}.pfill{height:100%;background:#e8325a;border-radius:2px}.ptxt{font-size:10px;font-weight:700;color:#e8325a;white-space:nowrap}.sec{margin-bottom:12px;border:1px solid #e5e0a0;border-radius:6px;overflow:hidden;page-break-inside:avoid}.shd{display:flex;align-items:center;gap:7px;background:#fef9c3;padding:6px 10px;border-bottom:1px solid #e5e0a0}.snum{width:16px;height:16px;background:#111;color:#fef9c3;border-radius:3px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}.stit{font-size:11px;font-weight:700;flex:1}.spg{font-size:10px;color:#7a7040}.item{display:flex;align-items:flex-start;gap:7px;padding:6px 10px;border-bottom:1px solid #f5f0cc;background:#fefce8}.item:last-child{border-bottom:none}.item.done{background:#f0fdf4}.chk{width:12px;height:12px;border-radius:2px;border:1.5px solid #b0a860;background:transparent;font-size:8px;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}.chk.ok{background:#059669;border-color:#059669}.itext{flex:1}.ilbl{font-size:11px;line-height:1.5;color:#111}.item.done .ilbl{color:#aaa;text-decoration:line-through}.photos{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}.photos img{width:80px;height:60px;object-fit:cover;border-radius:3px;border:1px solid #e9e4aa}.sig{margin-top:18px;padding-top:10px;border-top:1px solid #eee}.siglbl{font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}.sigimg{max-width:160px;border:1px solid #dde;border-radius:3px;display:block}.footer{margin-top:16px;font-size:9px;color:#bbb;text-align:center;border-top:1px solid #eee;padding-top:7px}@media print{@page{margin:10mm}body{padding:0}}';
+  const css='*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:12px;color:#111;background:#fff;padding:24px 28px;max-width:680px;margin:0 auto}h1{font-size:17px;font-weight:800;margin-bottom:2px}.sub{font-size:11px;color:#888;margin-bottom:2px}.resp{font-size:16px;font-weight:700;margin-bottom:10px}.badge{display:inline-block;background:#111;color:#fef9c3;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:3px;margin-bottom:5px}.prow{display:flex;align-items:center;gap:8px;margin-bottom:18px}.pbg{flex:1;height:4px;background:#eee;border-radius:2px;overflow:hidden}.pfill{height:100%;background:#e8325a;border-radius:2px}.ptxt{font-size:10px;font-weight:700;color:#e8325a;white-space:nowrap}.sec{margin-bottom:12px;border:1px solid #e5e0a0;border-radius:6px;overflow:hidden;page-break-inside:avoid}.shd{display:flex;align-items:center;gap:7px;background:#fef9c3;padding:6px 10px;border-bottom:1px solid #e5e0a0}.snum{width:16px;height:16px;background:#111;color:#fef9c3;border-radius:3px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}.stit{font-size:11px;font-weight:700;flex:1}.spg{font-size:10px;color:#7a7040}.item{display:flex;align-items:flex-start;gap:7px;padding:6px 10px;border-bottom:1px solid #f5f0cc;background:#fefce8}.item:last-child{border-bottom:none}.item.done{background:#f0fdf4}.chk{width:15px;height:15px;border-radius:3px;border:1.5px solid #b0a860;background:transparent;font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}.chk.ok{background:#059669;border-color:#059669}.itext{flex:1}.ilbl{font-size:11px;line-height:1.5;color:#111}.item.done .ilbl{color:#888}.photos{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}.photos img{width:80px;height:60px;object-fit:cover;border-radius:3px;border:1px solid #e9e4aa}.sig{margin-top:18px;padding-top:10px;border-top:1px solid #eee}.siglbl{font-size:9px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}.sigimg{max-width:160px;border:1px solid #dde;border-radius:3px;display:block}.footer{margin-top:16px;font-size:9px;color:#bbb;text-align:center;border-top:1px solid #eee;padding-top:7px}@media print{@page{margin:10mm}body{padding:0}}';
   return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"/><title>Checklist '+modeLabel+' — Caja SF</title><style>'+css+'</style></head><body><div class="badge">'+modeLabel+'</div><h1>Checklist Caja SF</h1><div class="sub">'+d+' · '+t+'</div>'+(S.clName?'<div class="resp">'+S.clName+'</div>':'')+'<div class="prow"><div class="pbg"><div class="pfill" style="width:'+pct+'%"></div></div><span class="ptxt">'+done+'/'+allItems.length+' · '+pct+'%</span></div>'+body+sigHTML+'<div class="footer">Caja SF · '+d+'</div></body></html>';
 }
 
@@ -1127,23 +1127,22 @@ function bind(){
     }
     persist();
     // Generate PDF HTML
-    const html=buildPDFHTML(S.clMode||'apertura');
-    const blob=new Blob([html],{type:'text/html;charset=utf-8'});
     const mode=S.clMode||'apertura';
-    const fname=`checklist-${mode}-${new Date().toISOString().split('T')[0]}.html`;
-    const file=new File([blob],fname,{type:'text/html'});
-    // Try native share (mobile) first
-    if(navigator.canShare&&navigator.canShare({files:[file]})){
-      try{await navigator.share({files:[file],title:'Checklist Caja SF'});return;}
-      catch(e){if(e.name==='AbortError')return;}
+    const html=buildPDFHTML(mode);
+    // Open in new window and auto-print → user saves as PDF, then shares
+    const w=window.open('','_blank');
+    if(w){
+      w.document.open();w.document.write(html);w.document.close();
+      w.onload=()=>{w.focus();w.print();};
+    } else {
+      // Fallback: blob download
+      const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;a.download='checklist-'+mode+'.html';
+      document.body.appendChild(a);a.click();
+      setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
     }
-    // Fallback: download the file
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;a.download=fname;
-    document.body.appendChild(a);a.click();
-    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
-    toast('Archivo descargado — comparte desde tus archivos');
   });
 
   // tips dismiss
