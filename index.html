@@ -698,7 +698,7 @@ async function buildPDF(mode){
       const photos=S.clPhotos[item.id]||[];
       const lines=doc.splitTextToSize(item.text,colW-14);
       const textH=lines.length*5;
-      const photoH=photos.length?(26+4):0; // photo height + gap above
+      const photoH=photos.length?(29+6):0; // photo height + gap above
       const rowH=Math.max(10, 4+textH+photoH+4); // pad top+bottom
       checkPage(rowH);
       // Row bg
@@ -722,16 +722,15 @@ async function buildPDF(mode){
       // Item text
       doc.setTextColor(ok?160:17,ok?160:17,ok?160:17);
       doc.setFontSize(9);doc.setFont('helvetica','normal');
-      doc.text(lines,margin+11,y+5+lines[0].length*0.001); // baseline
       doc.text(lines,margin+11,y+6);
       // Photos
       if(photos.length){
         const py=y+4+textH+4; // gap below text
         let px=margin+11;
         for(const ph of photos.slice(0,4)){
-          try{doc.addImage(ph,'JPEG',px,py,24,18);}catch(e){}
-          px+=26;
-          if(px>margin+colW-26)break;
+          try{doc.addImage(ph,'JPEG',px,py,38,29);}catch(e){}
+          px+=40;
+          if(px>margin+colW-40)break;
         }
       }
       y+=rowH;
