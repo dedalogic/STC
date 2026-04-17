@@ -1412,12 +1412,12 @@ function bind(){
       }catch(e){console.error(e);toast('Error PDF: '+e.message);}
       // WA text
       const waMsg=`*Checklist apertura${nombre?' — '+nombre:''}*\nEfectivo inicial: $${(+cj.efectivoAp||0).toLocaleString('es-CL')}`;
-      window.open('https://wa.me/?text='+encodeURIComponent(waMsg),'_blank');
+      openWA(waMsg);
 
     } else if(S.clScreen==='amCi'){
       // AM Cierre: solo mensaje WA, sin PDF
       const waMsg=`*AM Cierre${nombre?' — '+nombre:''}*\nEfectivo al iniciar: $${(+cj.efectivoAp||0).toLocaleString('es-CL')}\nEfectivo en caja al cerrar: $${(+cj.efectivo||0).toLocaleString('es-CL')}\nDinero en sobre: $${(+cj.sobre||0).toLocaleString('es-CL')}\nTransferencias recibidas: $${(+cj.transferencias||0).toLocaleString('es-CL')}`;
-      window.open('https://wa.me/?text='+encodeURIComponent(waMsg),'_blank');
+      openWA(waMsg);
 
     } else {
       // PM Cierre: PDF + WA message
@@ -1435,7 +1435,7 @@ function bind(){
         if(!shared)doc.save(fname);
       }catch(e){console.error(e);toast('Error PDF: '+e.message);}
       const waMsg=`*PM Cierre${nombre?' — '+nombre:''}*\nEfectivo al iniciar: $${(+cj.efectivoAp||0).toLocaleString('es-CL')}\nEfectivo en caja al cerrar: $${(+cj.efectivo||0).toLocaleString('es-CL')}\nDinero en sobre: $${(+cj.sobre||0).toLocaleString('es-CL')}\nTransferencias recibidas: $${(+cj.transferencias||0).toLocaleString('es-CL')}`;
-      window.open('https://wa.me/?text='+encodeURIComponent(waMsg),'_blank');
+      openWA(waMsg);
     }
   });
 
