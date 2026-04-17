@@ -1035,8 +1035,8 @@ function rClScreen_AmCierre(){
   return`<div>
     ${clBackBtn()}
     <div style="font-size:20px;font-weight:800;letter-spacing:-.3px;margin-bottom:18px">AM Cierre</div>
-    <div style="background:var(--white);border:1.5px solid ${filled?'#bbf7d0':'var(--g2)'};border-radius:12px;padding:14px;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:700;margin-bottom:12px">Control de dinero</div>
+    <div style="background:#F8F5FF;border-radius:var(--r);padding:14px;margin-bottom:14px;box-shadow:var(--shadow)">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:#7B2FBE">Control de dinero</div>
       <div style="display:flex;flex-direction:column;gap:10px">
         ${cajaCampos(cj)}
       </div>
@@ -1391,31 +1391,50 @@ function bind(){
     else if(S.clScreen==='pmCi')S.sent.pmCi=true;
     persist();
     await new Promise(r=>setTimeout(r,100));
-    // Generate PDF first
-    if(!window.jspdf){toast('Librería PDF no cargada');return;}
-    try{
-      const doc=await buildPDF(mode);
-      const fname='checklist-'+mode+'-'+now2.toISOString().split('T')[0]+'.pdf';
-      const pdfBlob=doc.output('blob');
-      const file=new File([pdfBlob],fname,{type:'application/pdf'});
-      let shared=false;
-      if(navigator.canShare&&navigator.canShare({files:[file]})){
-        try{await navigator.share({files:[file],title:'Checklist '+mode});shared=true;}
-        catch(e){if(e.name==='AbortError')return;}
-      }
-      if(!shared)doc.save(fname);
-    }catch(e){console.error(e);toast('Error PDF: '+e.message);}
-    // Send WA message after PDF (use window.open to avoid navigating away)
-    {
-      const d=now2.toLocaleDateString('es-CL',{day:'numeric',month:'long'});
-      const t=now2.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
-      let waMsg;
-      if(mode==='apertura'){
-        waMsg=`*APERTURA TURNO AM — ${d} ${t}*\n${S.clName?`Responsable: ${S.clName}\n`:''}\n💵 Efectivo inicial en caja: $${(+cj.efectivoAp||0).toLocaleString('es-CL')}`;
-      } else {
-        waMsg=`*CIERRE TURNO PM — ${d} ${t}*\n${S.clName?`Responsable: ${S.clName}\n`:''}\n💵 Efectivo al iniciar turno: $${(+cj.efectivoAp||0).toLocaleString('es-CL')}\n💵 Efectivo en caja al cerrar: $${(+cj.efectivo||0).toLocaleString('es-CL')}\n💵 Dinero en sobre: $${(+cj.sobre||0).toLocaleString('es-CL')}\n🔄 Transferencias: $${(+cj.transferencias||0).toLocaleString('es-CL')}`;
-      }
-      // Always open in new tab/window to avoid navigating away from app
+    const d=now2.toLocaleDateString('es-CL',{day:'numeric',month:'long'});
+    const t=now2.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+    const nombre=S.clName||'';
+
+    if(S.clScreen==='amAp'){
+      // Apertura: PDF + WA message with name and efectivo inicial
+      if(!window.jspdf){toast('Librería PDF no cargada');return;}
+      try{
+        const doc=await buildPDF('apertura');
+        const fname='checklist-apertura-'+now2.toISOString().split('T')[0]+'.pdf';
+        const pdfBlob=doc.output('blob');
+        const file=new File([pdfBlob],fname,{type:'application/pdf'});
+        let shared=false;
+        if(navigator.canShare&&navigator.canShare({files:[file]})){
+          try{await navigator.share({files:[file],title:'Checklist Apertura'});shared=true;}
+          catch(e){if(e.name==='AbortError')return;}
+        }
+        if(!shared)doc.save(fname);
+      }catch(e){console.error(e);toast('Error PDF: '+e.message);}
+      // WA text
+      const waMsg=`*Checklist apertura${nombre?' — '+nombre:''}*\nEfectivo inicial: $${(+cj.efectivoAp||0).toLocaleString('es-CL')}`;
+      window.open('https://wa.me/?text='+encodeURIComponent(waMsg),'_blank');
+
+    } else if(S.clScreen==='amCi'){
+      // AM Cierre: solo mensaje WA, sin PDF
+      const waMsg=`*AM Cierre${nombre?' — '+nombre:''}*\nEfectivo al iniciar: $${(+cj.efectivoAp||0).toLocaleString('es-CL')}\nEfectivo en caja al cerrar: $${(+cj.efectivo||0).toLocaleString('es-CL')}\nDinero en sobre: $${(+cj.sobre||0).toLocaleString('es-CL')}\nTransferencias recibidas: $${(+cj.transferencias||0).toLocaleString('es-CL')}`;
+      window.open('https://wa.me/?text='+encodeURIComponent(waMsg),'_blank');
+
+    } else {
+      // PM Cierre: PDF + WA message
+      if(!window.jspdf){toast('Librería PDF no cargada');return;}
+      try{
+        const doc=await buildPDF('cierre');
+        const fname='checklist-cierre-'+now2.toISOString().split('T')[0]+'.pdf';
+        const pdfBlob=doc.output('blob');
+        const file=new File([pdfBlob],fname,{type:'application/pdf'});
+        let shared=false;
+        if(navigator.canShare&&navigator.canShare({files:[file]})){
+          try{await navigator.share({files:[file],title:'Checklist PM Cierre'});shared=true;}
+          catch(e){if(e.name==='AbortError')return;}
+        }
+        if(!shared)doc.save(fname);
+      }catch(e){console.error(e);toast('Error PDF: '+e.message);}
+      const waMsg=`*PM Cierre${nombre?' — '+nombre:''}*\nEfectivo al iniciar: $${(+cj.efectivoAp||0).toLocaleString('es-CL')}\nEfectivo en caja al cerrar: $${(+cj.efectivo||0).toLocaleString('es-CL')}\nDinero en sobre: $${(+cj.sobre||0).toLocaleString('es-CL')}\nTransferencias recibidas: $${(+cj.transferencias||0).toLocaleString('es-CL')}`;
       window.open('https://wa.me/?text='+encodeURIComponent(waMsg),'_blank');
     }
   });
