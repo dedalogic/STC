@@ -707,7 +707,7 @@ async function doPDF(mode){
     const doc = await buildPDF(mode||S.clMode||'apertura');
     const fname = 'checklist-'+(mode||S.clMode||'apertura')+'-'+new Date().toISOString().split('T')[0]+'.pdf';
     doc.save(fname);
-  }catch(e){console.error(e);toast('Error generando PDF');}
+  }catch(e){console.error(e);toast('Enviando');}
 }
 
 
@@ -1363,7 +1363,7 @@ function bind(){
         toast('Completa el cierre de caja primero');return;
       }
     }
-    toast('Generando PDF…');
+    toast('Enviando…');
     // Capture sig
     const c=document.getElementById('sigC');
     if(c){
