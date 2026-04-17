@@ -437,8 +437,8 @@ const PRODUCTS=[
   {id:32,n:'Bolsas envío',             cat:'pkg',mw:120,mm:480},
   {id:33,n:'Cajas delivery',           cat:'pkg',mw:400,mm:1600},
   {id:34,n:'Foopack envoltura hamburguesa',cat:'pkg',mw:750,mm:3000},
-  {id:29,n:'Platos Mac & Cheese + tapas',  cat:'pkg',mw:75,mm:300},
-  {id:30,n:'Platos ensaladas + tapas', cat:'pkg',mw:25,mm:100},
+  {id:29,n:'Pote Mac & Cheese 750cc + tapas',  cat:'pkg',mw:75,mm:300},
+  {id:30,n:'Pote ensalada 1300cc + tapas', cat:'pkg',mw:25,mm:100},
   {id:26,n:'Salseros',                 cat:'pkg',mw:500,mm:2000},
   {id:31,n:'Stickers vasos',           cat:'pkg',mw:250,mm:1000},
   {id:25,n:'Tenedores',                cat:'pkg',mw:500,mm:2000},
@@ -495,7 +495,9 @@ const CL_APERTURA=[
 const CL_CIERRE=[
   { id:'sc1', title:'Limpieza Final',
     items:[
-      {id:'c01',text:'Limpiar sillas y mesas de terraza antes de guardar.',photo:false},
+      {id:'c01',text:'Limpiar mesas de adentro.',photo:true},
+      {id:'c02b',text:'Barrer suelo del local.',photo:false},
+      {id:'c01b',text:'Limpiar sillas y mesas de terraza antes de guardar.',photo:false},
       {id:'c02',text:'Guardar quitasoles y apilar mesas en la entrada.',photo:false},
       {id:'c03',text:'Barrer todo el local nuevamente.',photo:false},
       {id:'c05',text:'Trapear pisos finales.',photo:true},
@@ -519,7 +521,9 @@ function loadS(){
   try{const s=localStorage.getItem('cajasf_v11');if(s)return JSON.parse(s);}catch(e){}
   return{counts:{},prov:{},desc:{},collapsed:{},history:[],
          clMode:'apertura',clName:'',clDone:{},clPhotos:{},clCollapsed:{},sig:null,
-         onboarded:false,hideTips:false,guideSeen:{stock:false,check:false,exp:false}};
+         onboarded:false,hideTips:false,guideSeen:{stock:false,check:false,exp:false},
+         caja:{efectivoAp:'',efectivo:'',sobre:'',transferencias:''},
+         aperturaSent:false,apColapsed:true};
 }
 let S=loadS();
 function persist(){localStorage.setItem('cajasf_v11',JSON.stringify(S))}
@@ -546,7 +550,7 @@ function todayStr(){return new Date().toISOString().split('T')[0]}
 function fmtD(d){return new Date(d+'T12:00').toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'})}
 
 // ── EXCEL ─────────────────────────────────────────────────────
-function doExcel(){
+async function doExcel(){
   const wb=XLSX.utils.book_new(),d=todayStr();
   const rows=[['Producto','Cat.','Stock','Mín/sem','Mín/mes','Estado','Proveedor']];
   PRODUCTS.forEach(p=>{const c=S.counts[p.id]??'',s=sts(p.id);rows.push([p.n,CATS[p.cat].l,c,p.mw,p.mm,s==='crit'?'CRÍTICO':s==='low'?'BAJO':s==='ok'?'OK':'Sin contar',S.prov[p.id]||'']);});
@@ -565,7 +569,23 @@ function doExcel(){
     const ws3=XLSX.utils.aoa_to_sheet(hr);ws3['!cols']=[{wch:13},{wch:34},{wch:10},{wch:10},{wch:10}];
     XLSX.utils.book_append_sheet(wb,ws3,'Historial');
   }
-  XLSX.writeFile(wb,'stock-caja-sf-'+d+'.xlsx');toast('Excel exportado');
+  const fname='stock-caja-sf-'+d+'.xlsx';
+  // On mobile: try share as file
+  const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if(isMobile&&navigator.canShare){
+    try{
+      const wbout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+      const blob=new Blob([wbout],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      const file=new File([blob],fname,{type:blob.type});
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],title:'Stock Caja SF'});
+        return;
+      }
+    }catch(e){if(e.name==='AbortError')return;}
+  }
+  // Desktop / fallback: normal download
+  XLSX.writeFile(wb,fname);
+  toast('Excel exportado');
 }
 
 function saveDay(){
@@ -593,10 +613,14 @@ function waStock(){
   const d=now.toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'});
   const t=now.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
   let msg=`*STOCK CAJA SF — ${d}, ${t}*\n\n`;
-  const crit=PRODUCTS.filter(p=>sts(p.id)==='crit'),low=PRODUCTS.filter(p=>sts(p.id)==='low');
-  if(crit.length){msg+=`CRÍTICO (${crit.length})\n`;crit.forEach(p=>{msg+=`• ${p.n}: ${S.counts[p.id]??0} / mín ${p.mw}\n`});msg+='\n';}
-  if(low.length){msg+=`BAJO (${low.length})\n`;low.forEach(p=>{msg+=`• ${p.n}: ${S.counts[p.id]??0} / mín ${p.mw}\n`});msg+='\n';}
-  msg+=`Contados: ${Object.keys(S.counts).length}/${PRODUCTS.length}`;
+  const crit=PRODUCTS.filter(p=>sts(p.id)==='crit');
+  const low=PRODUCTS.filter(p=>sts(p.id)==='low');
+  const ok=PRODUCTS.filter(p=>sts(p.id)==='ok');
+  if(crit.length){msg+=`🔴 CRÍTICO (${crit.length})\n`;crit.forEach(p=>{msg+=`• ${p.n}: ${S.counts[p.id]??0} / mín ${p.mw}\n`});msg+='\n';}
+  if(low.length){msg+=`🟡 BAJO (${low.length})\n`;low.forEach(p=>{msg+=`• ${p.n}: ${S.counts[p.id]??0} / mín ${p.mw}\n`});msg+='\n';}
+  if(ok.length){msg+=`🟢 OK (${ok.length})\n`;ok.forEach(p=>{msg+=`• ${p.n}: ${S.counts[p.id]??0}\n`});msg+='\n';}
+  const uncounted=PRODUCTS.filter(p=>!isCounted(p.id));
+  if(uncounted.length)msg+=`Sin contar: ${uncounted.length} productos\n`;
   openWA(msg);
 }
 
@@ -736,6 +760,45 @@ async function buildPDF(mode){
       y+=rowH;
     }
     y+=4;
+  }
+
+  // ── CIERRE DE CAJA (solo cierre) ──
+  if(S.caja&&(S.caja.efectivo!==''||S.caja.sobre!==''||S.caja.transferencias!=='')){
+    const cj=S.caja;
+    checkPage(48);
+    y+=4;
+    doc.setDrawColor(220,220,220);doc.setLineWidth(0.3);
+    doc.line(margin,y,margin+colW,y);
+    y+=5;
+    // Header
+    doc.setFillColor(232,50,90);
+    doc.roundedRect(margin,y,colW,8,1,1,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(9);doc.setFont('helvetica','bold');
+    doc.text('CIERRE DE CAJA — TURNO '+(mode==='apertura'?'AM':'PM'),margin+4,y+5.5);
+    y+=11;
+    // Rows
+    const rows2=[
+      ['Efectivo en caja','$'+(+cj.efectivo||0).toLocaleString('es-CL')],
+      ['Dinero en sobre','$'+(+cj.sobre||0).toLocaleString('es-CL')],
+      ['Transferencias recibidas','$'+(+cj.transferencias||0).toLocaleString('es-CL')],
+    ];
+    rows2.forEach(([lbl,val],i)=>{
+      doc.setFillColor(i%2===0?248:255,i%2===0?248:255,i%2===0?248:255);
+      doc.rect(margin,y,colW,7,'F');
+      doc.setTextColor(80,80,80);doc.setFontSize(9);doc.setFont('helvetica','normal');
+      doc.text(lbl,margin+3,y+5);
+      doc.setFont('helvetica','bold');doc.setTextColor(17,17,17);
+      doc.text(val,margin+colW-3,y+5,{align:'right'});
+      y+=7;
+    });
+    // Total
+    const total=(+cj.efectivo||0)+(+cj.sobre||0)+(+cj.transferencias||0);
+    doc.setFillColor(5,150,105);
+    doc.rect(margin,y,colW,8,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(10);doc.setFont('helvetica','bold');
+    doc.text('TOTAL TURNO',margin+3,y+5.5);
+    doc.text('$'+total.toLocaleString('es-CL'),margin+colW-3,y+5.5,{align:'right'});
+    y+=12;
   }
 
   // ── FIRMA ──
@@ -971,7 +1034,9 @@ function rChecklist(mode,clDone,clTotal,secs){
     <div class="cl-toggle">
       <button class="cl-tog-btn${isAp?' on':''}" data-mode="apertura" style="${isAp?'background:#1d6fa8;color:white':''}">Apertura</button>
       <button class="cl-tog-btn${!isAp?' on':''}" data-mode="cierre" style="${!isAp?'background:#6b21a8;color:white':''}">Cierre</button>
-    </div>
+    </div>`;
+
+  h+=`
     <div class="cl-name-wrap">
       <label>Responsable del turno</label>
       <input class="cl-name-inp" id="clName" type="text" placeholder="Tu nombre…" value="${name.replace(/"/g,'&quot;')}"/>
@@ -998,6 +1063,36 @@ function rChecklist(mode,clDone,clTotal,secs){
       ${open?`<div class="cl-book-body">${sec.items.map(item=>rClItem(item)).join('')}</div>`:''}
     </div>`;
   });
+
+  // ── APERTURA: solo pregunta efectivo en caja al abrir ──
+  if(isAp){
+    if(!S.caja)S.caja={efectivo:'',sobre:'',transferencias:''};
+    h+=`<div style="background:var(--white);border:1px solid var(--g2);border-radius:var(--r);padding:14px;margin-top:12px">
+      <div style="font-size:12px;font-weight:700;margin-bottom:3px">Efectivo en caja al abrir</div>
+      <div style="font-size:11px;color:var(--g4);margin-bottom:10px">Se enviará junto al checklist de apertura.</div>
+      <input id="cajaEfectivo" type="number" inputmode="numeric" placeholder="$0" value="${S.caja.efectivoAp??''}" style="width:100%;background:var(--g1);border:1.5px solid var(--g2);border-radius:8px;padding:10px 12px;font-family:var(--fn);font-size:15px;font-weight:600;color:var(--black);outline:none"/>
+    </div>`;
+  }
+
+  // ── CIERRE: 3 campos de caja ──
+  if(!isAp){
+    if(!S.caja)S.caja={efectivo:'',sobre:'',transferencias:''};
+    const cj=S.caja;
+    const filled=cj.efectivo!==''&&cj.sobre!==''&&cj.transferencias!=='';
+    h+=`<div style="background:var(--white);border:1.5px solid ${filled?'#059669':'var(--g2)'};border-radius:var(--r);padding:14px;margin-top:12px">
+      <div style="font-size:12px;font-weight:700;margin-bottom:3px">Cierre de Caja</div>
+      <div style="font-size:11px;color:var(--g4);margin-bottom:10px">Completa antes de finalizar el turno.</div>
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <div><label style="display:block;font-size:10px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Efectivo en caja ($)</label>
+          <input id="cajaEfectivo" type="number" inputmode="numeric" placeholder="0" value="${cj.efectivo??''}" style="width:100%;background:var(--g1);border:1.5px solid var(--g2);border-radius:8px;padding:10px 12px;font-family:var(--fn);font-size:15px;font-weight:600;color:var(--black);outline:none"/></div>
+        <div><label style="display:block;font-size:10px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Dinero en sobre ($)</label>
+          <input id="cajaSobre" type="number" inputmode="numeric" placeholder="0" value="${cj.sobre??''}" style="width:100%;background:var(--g1);border:1.5px solid var(--g2);border-radius:8px;padding:10px 12px;font-family:var(--fn);font-size:15px;font-weight:600;color:var(--black);outline:none"/></div>
+        <div><label style="display:block;font-size:10px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Transferencias recibidas ($)</label>
+          <input id="cajaTrans" type="number" inputmode="numeric" placeholder="0" value="${cj.transferencias??''}" style="width:100%;background:var(--g1);border:1.5px solid var(--g2);border-radius:8px;padding:10px 12px;font-family:var(--fn);font-size:15px;font-weight:600;color:var(--black);outline:none"/></div>
+        ${filled?`<div style="background:#f0fdf4;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;color:#059669">Total: $${(+cj.efectivo+ +cj.sobre+ +cj.transferencias).toLocaleString('es-CL')}</div>`:''}
+      </div>
+    </div>`;
+  }
 
   h+=`<div class="sig-card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -1207,6 +1302,23 @@ function bind(){
   if(finSave)finSave.addEventListener('click',()=>{showFinish=false;saveDay()});
 
   // checklist
+  // cierre de caja inputs
+  ['cajaEfectivo','cajaSobre','cajaTrans'].forEach(eid=>{
+    const el=document.getElementById(eid);
+    if(!el)return;
+    el.addEventListener('input',e=>{
+      if(!S.caja)S.caja={efectivoAp:'',efectivo:'',sobre:'',transferencias:''};
+      const mode=S.clMode||'apertura';
+      if(eid==='cajaEfectivo') S.caja[mode==='apertura'?'efectivoAp':'efectivo']=e.target.value;
+      if(eid==='cajaSobre') S.caja.sobre=e.target.value;
+      if(eid==='cajaTrans') S.caja.transferencias=e.target.value;
+      persist();
+      const filled=S.caja.efectivo!==''&&S.caja.sobre!==''&&S.caja.transferencias!=='';
+      const btn=document.getElementById('clFinish');
+      if(btn&&mode==='cierre'){btn.style.opacity=filled?'1':'.4';btn.style.cursor=filled?'pointer':'not-allowed';}
+    });
+  });
+
   document.querySelectorAll('[data-mode]').forEach(el=>el.addEventListener('click',()=>{S.clMode=el.dataset.mode;persist();render()}));
   const cln=document.getElementById('clName');if(cln){cln.addEventListener('input',e=>{S.clName=e.target.value;persist()});}
   document.querySelectorAll('[data-cls]').forEach(el=>el.addEventListener('click',()=>{S.clCollapsed[el.dataset.cls]=!S.clCollapsed[el.dataset.cls];render()}));
@@ -1242,20 +1354,38 @@ function bind(){
   });
   const fin=document.getElementById('clFinish');
   if(fin)fin.addEventListener('click',async()=>{
+    const mode=S.clMode||'apertura';
+    const cj=S.caja||{};
+    // Cierre: validate all 3 caja fields
+    if(mode==='cierre'){
+      if(cj.efectivo===''||cj.sobre===''||cj.transferencias===''){
+        toast('Completa el cierre de caja primero');return;
+      }
+    }
     toast('Generando PDF…');
-    // Capture sig from canvas only if user drew new strokes (not yet in S.sig)
     const c=document.getElementById('sigC');
     if(c){
       const ctx=c.getContext('2d');
-      if(ctx){
-        const px=ctx.getImageData(0,0,c.width,c.height).data;
-        const hasStrokes=px.some((v,i)=>i%4===3&&v>0);
-        if(hasStrokes){S.sig=c.toDataURL();persist();}
+      if(ctx){const px=ctx.getImageData(0,0,c.width,c.height).data;if(px.some((v,i)=>i%4===3&&v>0)){S.sig=c.toDataURL();persist();}}
+    }
+    // WA message
+    {
+      const now=new Date();
+      const d=now.toLocaleDateString('es-CL',{day:'numeric',month:'long'});
+      const t=now.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+      const turno=mode==='apertura'?'AM':'PM';
+      if(mode==='apertura'){
+        // Solo efectivo al abrir
+        const waMsg=`*APERTURA TURNO AM — ${d} ${t}*\n${S.clName?`Responsable: ${S.clName}\n`:''}\n💵 Efectivo en caja al abrir: $${(+cj.efectivoAp||0).toLocaleString('es-CL')}`;
+        openWA(waMsg);
+      } else {
+        const total=(+cj.efectivo||0)+(+cj.sobre||0)+(+cj.transferencias||0);
+        const waMsg=`*CIERRE TURNO PM — ${d} ${t}*\n${S.clName?`Responsable: ${S.clName}\n`:''}\n💵 Efectivo al abrir turno AM: $${(+cj.efectivoApertura||0).toLocaleString('es-CL')}\n💵 Dinero en sobre: $${(+cj.sobre||0).toLocaleString('es-CL')}\n💳 Efectivo en caja: $${(+cj.efectivo||0).toLocaleString('es-CL')}\n🔄 Transferencias: $${(+cj.transferencias||0).toLocaleString('es-CL')}\n─────────────────\n*Total turno: $${total.toLocaleString('es-CL')}*`;
+        openWA(waMsg);
       }
     }
-    // Small delay to ensure FileReader callbacks for any pending photos have settled
+    persist();
     await new Promise(r=>setTimeout(r,150));
-    const mode=S.clMode||'apertura';
     if(!window.jspdf){toast('Librería PDF no cargada aún, intenta de nuevo');return;}
     try{
       const doc=await buildPDF(mode);
@@ -1280,7 +1410,7 @@ function bind(){
 
   // export
   const bSave=document.getElementById('bSave');if(bSave)bSave.addEventListener('click',saveDay);
-  const bExcel=document.getElementById('bExcel');if(bExcel)bExcel.addEventListener('click',doExcel);
+  const bExcel=document.getElementById('bExcel');if(bExcel)bExcel.addEventListener('click',()=>doExcel());
   const bWA=document.getElementById('bWA');if(bWA)bWA.addEventListener('click',waStock);
   const bPDF=document.getElementById('bPDF');if(bPDF)bPDF.addEventListener('click',()=>doPDF(S.clMode||'apertura'));
 }
