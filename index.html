@@ -47,6 +47,10 @@ body{font-family:var(--fn);background:var(--bg);color:var(--black);max-width:480
 /* PAGE */
 .pg{padding:16px 16px 110px;display:none}
 .pg.on{display:block}
+@keyframes slideIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideBack{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
+.cl-screen-enter{animation:slideIn .22s cubic-bezier(.25,.46,.45,.94) forwards}
+.cl-screen-back{animation:slideBack .22s cubic-bezier(.25,.46,.45,.94) forwards}
 
 /* SEARCH */
 .sbar{position:relative;margin-bottom:14px}
@@ -421,7 +425,7 @@ const SBG={crit:'var(--red-lt)',low:'var(--amb-lt)',ok:'var(--grn-lt)',none:'tra
 const SL={crit:'Crítico',low:'Bajo',ok:'OK',none:'—'};
 const SCHI={crit:'chip-r',low:'chip-a',ok:'chip-g'};
 
-let tab='check',expanded=null,search='',toastMsg=null,sf={};
+let tab='check',expanded=null,search='',toastMsg=null,sf={},clNavDir='forward';
 let obStep=0, guideStep=-1, showMenu=false, showMenuNameEdit=false, editProd=null, showFinish=false;
 const OB_NAME_KEY='_obname';
 function toast(m){toastMsg=m;render();setTimeout(()=>{toastMsg=null;render();},2100)}
@@ -707,7 +711,7 @@ async function doPDF(mode){
     const doc = await buildPDF(mode||S.clMode||'apertura');
     const fname = 'checklist-'+(mode||S.clMode||'apertura')+'-'+new Date().toISOString().split('T')[0]+'.pdf';
     doc.save(fname);
-  }catch(e){console.error(e);toast('Enviando');}
+  }catch(e){console.error(e);toast('Error generando PDF');}
 }
 
 
@@ -757,7 +761,7 @@ function render(){
       </div>
     </div>
     <div class="pg${tab==='stock'?' on':''}">${rStock(nCrit)}</div>
-    <div class="pg${tab==='check'?' on':''}">${rChecklist(mode,clDone,allCL.length,secs)}</div>
+    <div class="pg${tab==='check'?' on':''}" id="clPg">${rChecklist(mode,clDone,allCL.length,secs)}</div>
     <div class="pg${tab==='hist'?' on':''}">${rHist()}</div>
     <div class="pg${tab==='exp'?' on':''}">${rExp(nCrit)}</div>
     <div class="bnav"><div class="bnav-in">
@@ -1310,21 +1314,34 @@ function bind(){
 
   // checklist screen navigation
   const clSelAmAp=document.getElementById('clSelAmAp');
-  if(clSelAmAp)clSelAmAp.addEventListener('click',()=>{S.clScreen='amAp';S.clMode='apertura';persist();render()});
+  if(clSelAmAp)clSelAmAp.addEventListener('click',()=>{clNavDir='forward';S.clScreen='amAp';S.clMode='apertura';persist();render()});
   const clSelAmCi=document.getElementById('clSelAmCi');
-  if(clSelAmCi)clSelAmCi.addEventListener('click',()=>{S.clScreen='amCi';S.clMode='cierre';persist();render()});
+  if(clSelAmCi)clSelAmCi.addEventListener('click',()=>{clNavDir='forward';S.clScreen='amCi';S.clMode='cierre';persist();render()});
   const clSelPmCi=document.getElementById('clSelPmCi');
-  if(clSelPmCi)clSelPmCi.addEventListener('click',()=>{S.clScreen='pmCi';S.clMode='cierre';persist();render()});
+  if(clSelPmCi)clSelPmCi.addEventListener('click',()=>{clNavDir='forward';S.clScreen='pmCi';S.clMode='cierre';persist();render()});
   const clSelectAp=document.getElementById('clSelectAp');
   if(clSelectAp)clSelectAp.addEventListener('click',()=>{S.clScreen='apertura';S.clMode='apertura';persist();render()});
   const clSelectCi=document.getElementById('clSelectCi');
   if(clSelectCi)clSelectCi.addEventListener('click',()=>{S.clScreen='cierre';S.clMode='cierre';persist();render()});
   const clBack=document.getElementById('clBack');
-  if(clBack)clBack.addEventListener('click',()=>{S.clScreen='select';persist();render()});
+  if(clBack)clBack.addEventListener('click',()=>{clNavDir='back';S.clScreen='select';persist();render()});
   document.querySelectorAll('[data-mode]').forEach(el=>el.addEventListener('click',()=>{S.clMode=el.dataset.mode;persist();render()}));
   const cln=document.getElementById('clName');if(cln){cln.addEventListener('input',e=>{S.clName=e.target.value;persist()});}
   document.querySelectorAll('[data-cls]').forEach(el=>el.addEventListener('click',()=>{S.clCollapsed[el.dataset.cls]=!S.clCollapsed[el.dataset.cls];render()}));
-  document.querySelectorAll('[data-clck]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();S.clDone[el.dataset.clck]=!S.clDone[el.dataset.clck];persist();render()}));
+  document.querySelectorAll('[data-clck]').forEach(el=>{
+    el.addEventListener('click',e=>{
+      e.stopPropagation();e.preventDefault();
+      S.clDone[el.dataset.clck]=!S.clDone[el.dataset.clck];
+      // don't call render() — just update the DOM directly for performance and stability
+      const item=el.closest('.cl-item');
+      if(item){
+        const isDone=S.clDone[el.dataset.clck];
+        item.classList.toggle('done',isDone);
+        el.classList.toggle('on',isDone);
+      }
+      persist();
+    },true); // capture phase so it fires before any parent handler
+  });
   const clr=document.getElementById('clReset');if(clr)clr.addEventListener('click',()=>{S.clDone={};S.clPhotos={};S.sig=null;persist();render()});
 
   // photos
@@ -1340,7 +1357,10 @@ function bind(){
     r.onload=ev=>{
       if(!S.clPhotos[id])S.clPhotos[id]=[];
       S.clPhotos[id].push(ev.target.result);
-      persist();render();
+      persist();
+      render();
+      // restore sig after render recreates canvas
+      if(S.sig){const cv2=document.getElementById('sigC');if(cv2){const ctx3=cv2.getContext('2d');const img=new Image();img.onload=()=>{ctx3.drawImage(img,0,0,cv2.width,cv2.height);cv2.closest('.sig-box').classList.add('drawn');};img.src=S.sig;}}
     };
     r.readAsDataURL(file);
   }));
@@ -1363,13 +1383,16 @@ function bind(){
         toast('Completa el cierre de caja primero');return;
       }
     }
-    toast('Enviando…');
-    // Capture sig
+    if(S.clScreen!=='amCi')toast('Generando PDF…');else toast('Enviando…');
+    // Capture sig from current DOM canvas (sigCtx may be stale after render)
     const c=document.getElementById('sigC');
     if(c){
-      const ctx=c.getContext('2d');
-      if(ctx){const px=ctx.getImageData(0,0,c.width,c.height).data;if(px.some((v,i)=>i%4===3&&v>0)){S.sig=c.toDataURL();}}
+      try{
+        const ctx=c.getContext('2d');
+        if(ctx){const px=ctx.getImageData(0,0,c.width,c.height).data;if(px.some((v,i)=>i%4===3&&v>0)){S.sig=c.toDataURL();}}
+      }catch(e){}
     }
+    // If canvas empty but S.sig exists, keep it — don't overwrite with null
     // Save checklist to history
     const now2=new Date();
     const hEntry={
@@ -1397,20 +1420,23 @@ function bind(){
 
     if(S.clScreen==='amAp'){
       // Apertura: PDF + WA message with name and efectivo inicial
-      if(!window.jspdf){toast('Librería PDF no cargada');return;}
+      if(!window.jspdf){
+        // jsPDF not loaded yet, just send WA
+        const waMsg2=`*Checklist apertura${nombre?' — '+nombre:''}*\nEfectivo inicial: $${(+cj.efectivoAp||0).toLocaleString('es-CL')}`;
+        openWA(waMsg2);return;
+      }
       try{
         const doc=await buildPDF('apertura');
         const fname='checklist-apertura-'+now2.toISOString().split('T')[0]+'.pdf';
         const pdfBlob=doc.output('blob');
         const file=new File([pdfBlob],fname,{type:'application/pdf'});
-        let shared=false;
+        let pdfShared=false;
         if(navigator.canShare&&navigator.canShare({files:[file]})){
-          try{await navigator.share({files:[file],title:'Checklist Apertura'});shared=true;}
-          catch(e){if(e.name==='AbortError')return;}
-        }
-        if(!shared)doc.save(fname);
+          try{await navigator.share({files:[file],title:'Checklist Apertura'});pdfShared=true;}
+          catch(e){if(e.name!=='AbortError')doc.save(fname);}
+        } else {doc.save(fname);}
       }catch(e){console.error(e);toast('Error PDF: '+e.message);}
-      // WA text
+      // Always send WA regardless of PDF result
       const waMsg=`*Checklist apertura${nombre?' — '+nombre:''}*\nEfectivo inicial: $${(+cj.efectivoAp||0).toLocaleString('es-CL')}`;
       openWA(waMsg);
 
@@ -1427,13 +1453,12 @@ function bind(){
         const fname='checklist-cierre-'+now2.toISOString().split('T')[0]+'.pdf';
         const pdfBlob=doc.output('blob');
         const file=new File([pdfBlob],fname,{type:'application/pdf'});
-        let shared=false;
         if(navigator.canShare&&navigator.canShare({files:[file]})){
-          try{await navigator.share({files:[file],title:'Checklist PM Cierre'});shared=true;}
-          catch(e){if(e.name==='AbortError')return;}
-        }
-        if(!shared)doc.save(fname);
+          try{await navigator.share({files:[file],title:'Checklist PM Cierre'});}
+          catch(e){if(e.name!=='AbortError')doc.save(fname);}
+        } else {doc.save(fname);}
       }catch(e){console.error(e);toast('Error PDF: '+e.message);}
+      // Always send WA
       const waMsg=`*PM Cierre${nombre?' — '+nombre:''}*\nEfectivo al iniciar: $${(+cj.efectivoAp||0).toLocaleString('es-CL')}\nEfectivo en caja al cerrar: $${(+cj.efectivo||0).toLocaleString('es-CL')}\nDinero en sobre: $${(+cj.sobre||0).toLocaleString('es-CL')}\nTransferencias recibidas: $${(+cj.transferencias||0).toLocaleString('es-CL')}`;
       openWA(waMsg);
     }
@@ -1451,6 +1476,17 @@ function bind(){
   const bExcel=document.getElementById('bExcel');if(bExcel)bExcel.addEventListener('click',()=>doExcel());
   const bWA=document.getElementById('bWA');if(bWA)bWA.addEventListener('click',waStock);
   const bPDF=document.getElementById('bPDF');if(bPDF)bPDF.addEventListener('click',()=>doPDF(S.clMode||'apertura'));
+
+  // Apply slide animation to checklist page content
+  const clPg=document.getElementById('clPg');
+  if(clPg&&tab==='check'&&S.clScreen!=='select'){
+    const inner=clPg.querySelector('div');
+    if(inner){
+      inner.classList.remove('cl-screen-enter','cl-screen-back');
+      void inner.offsetWidth; // force reflow
+      inner.classList.add(clNavDir==='back'?'cl-screen-back':'cl-screen-enter');
+    }
+  }
 }
 
 // ── AUTO-GUIDE ────────────────────────────────────────────────
