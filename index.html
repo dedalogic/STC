@@ -1076,20 +1076,21 @@ function rChecklist(mode,clDone,clTotal,secs){
 
   // ── CIERRE: 3 campos de caja ──
   if(!isAp){
-    if(!S.caja)S.caja={efectivo:'',sobre:'',transferencias:''};
+    if(!S.caja)S.caja={efectivoAp:'',efectivo:'',sobre:'',transferencias:''};
     const cj=S.caja;
-    const filled=cj.efectivo!==''&&cj.sobre!==''&&cj.transferencias!=='';
+    const filled=cj.efectivoAp!==''&&cj.efectivo!==''&&cj.sobre!==''&&cj.transferencias!=='';
     h+=`<div style="background:var(--white);border:1.5px solid ${filled?'#059669':'var(--g2)'};border-radius:var(--r);padding:14px;margin-top:12px">
       <div style="font-size:12px;font-weight:700;margin-bottom:3px">Cierre de Caja</div>
       <div style="font-size:11px;color:var(--g4);margin-bottom:10px">Completa antes de finalizar el turno.</div>
       <div style="display:flex;flex-direction:column;gap:9px">
+        <div><label style="display:block;font-size:10px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Efectivo al abrir turno AM ($)</label>
+          <input id="cajaEfectivoAp" type="number" inputmode="numeric" placeholder="0" value="${cj.efectivoAp??''}" style="width:100%;background:var(--g1);border:1.5px solid var(--g2);border-radius:8px;padding:10px 12px;font-family:var(--fn);font-size:15px;font-weight:600;color:var(--black);outline:none"/></div>
         <div><label style="display:block;font-size:10px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Efectivo en caja ($)</label>
           <input id="cajaEfectivo" type="number" inputmode="numeric" placeholder="0" value="${cj.efectivo??''}" style="width:100%;background:var(--g1);border:1.5px solid var(--g2);border-radius:8px;padding:10px 12px;font-family:var(--fn);font-size:15px;font-weight:600;color:var(--black);outline:none"/></div>
         <div><label style="display:block;font-size:10px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Dinero en sobre ($)</label>
           <input id="cajaSobre" type="number" inputmode="numeric" placeholder="0" value="${cj.sobre??''}" style="width:100%;background:var(--g1);border:1.5px solid var(--g2);border-radius:8px;padding:10px 12px;font-family:var(--fn);font-size:15px;font-weight:600;color:var(--black);outline:none"/></div>
         <div><label style="display:block;font-size:10px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Transferencias recibidas ($)</label>
           <input id="cajaTrans" type="number" inputmode="numeric" placeholder="0" value="${cj.transferencias??''}" style="width:100%;background:var(--g1);border:1.5px solid var(--g2);border-radius:8px;padding:10px 12px;font-family:var(--fn);font-size:15px;font-weight:600;color:var(--black);outline:none"/></div>
-        ${filled?`<div style="background:#f0fdf4;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;color:#059669">Total: $${(+cj.efectivo+ +cj.sobre+ +cj.transferencias).toLocaleString('es-CL')}</div>`:''}
       </div>
     </div>`;
   }
@@ -1303,19 +1304,17 @@ function bind(){
 
   // checklist
   // cierre de caja inputs
-  ['cajaEfectivo','cajaSobre','cajaTrans'].forEach(eid=>{
+  ['cajaEfectivoAp','cajaEfectivo','cajaSobre','cajaTrans'].forEach(eid=>{
     const el=document.getElementById(eid);
     if(!el)return;
     el.addEventListener('input',e=>{
       if(!S.caja)S.caja={efectivoAp:'',efectivo:'',sobre:'',transferencias:''};
       const mode=S.clMode||'apertura';
-      if(eid==='cajaEfectivo') S.caja[mode==='apertura'?'efectivoAp':'efectivo']=e.target.value;
-      if(eid==='cajaSobre') S.caja.sobre=e.target.value;
-      if(eid==='cajaTrans') S.caja.transferencias=e.target.value;
+      if(eid==='cajaEfectivoAp') S.caja.efectivoAp=e.target.value;
+      else if(eid==='cajaEfectivo') S.caja[mode==='apertura'?'efectivoAp':'efectivo']=e.target.value;
+      else if(eid==='cajaSobre') S.caja.sobre=e.target.value;
+      else if(eid==='cajaTrans') S.caja.transferencias=e.target.value;
       persist();
-      const filled=S.caja.efectivo!==''&&S.caja.sobre!==''&&S.caja.transferencias!=='';
-      const btn=document.getElementById('clFinish');
-      if(btn&&mode==='cierre'){btn.style.opacity=filled?'1':'.4';btn.style.cursor=filled?'pointer':'not-allowed';}
     });
   });
 
@@ -1358,7 +1357,7 @@ function bind(){
     const cj=S.caja||{};
     // Cierre: validate all 3 caja fields
     if(mode==='cierre'){
-      if(cj.efectivo===''||cj.sobre===''||cj.transferencias===''){
+      if(cj.efectivoAp===''||cj.efectivo===''||cj.sobre===''||cj.transferencias===''){
         toast('Completa el cierre de caja primero');return;
       }
     }
@@ -1379,8 +1378,7 @@ function bind(){
         const waMsg=`*APERTURA TURNO AM — ${d} ${t}*\n${S.clName?`Responsable: ${S.clName}\n`:''}\n💵 Efectivo en caja al abrir: $${(+cj.efectivoAp||0).toLocaleString('es-CL')}`;
         openWA(waMsg);
       } else {
-        const total=(+cj.efectivo||0)+(+cj.sobre||0)+(+cj.transferencias||0);
-        const waMsg=`*CIERRE TURNO PM — ${d} ${t}*\n${S.clName?`Responsable: ${S.clName}\n`:''}\n💵 Efectivo al abrir turno AM: $${(+cj.efectivoApertura||0).toLocaleString('es-CL')}\n💵 Dinero en sobre: $${(+cj.sobre||0).toLocaleString('es-CL')}\n💳 Efectivo en caja: $${(+cj.efectivo||0).toLocaleString('es-CL')}\n🔄 Transferencias: $${(+cj.transferencias||0).toLocaleString('es-CL')}\n─────────────────\n*Total turno: $${total.toLocaleString('es-CL')}*`;
+        const waMsg=`*CIERRE TURNO PM — ${d} ${t}*\n${S.clName?`Responsable: ${S.clName}\n`:''}\n💵 Efectivo al abrir turno AM: $${(+cj.efectivoAp||0).toLocaleString('es-CL')}\n💵 Dinero en sobre: $${(+cj.sobre||0).toLocaleString('es-CL')}\n💳 Efectivo en caja: $${(+cj.efectivo||0).toLocaleString('es-CL')}\n🔄 Transferencias: $${(+cj.transferencias||0).toLocaleString('es-CL')}`;
         openWA(waMsg);
       }
     }
