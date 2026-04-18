@@ -674,7 +674,14 @@ async function buildPDF(mode){
       doc.text(val,margin+colW-3,y+5,{align:'right'});
       y+=7;
     });
-y += 5;
+    // Total
+    const total=(+cj.efectivo||0)+(+cj.sobre||0)+(+cj.transferencias||0);
+    doc.setFillColor(5,150,105);
+    doc.rect(margin,y,colW,8,'F');
+    doc.setTextColor(255,255,255);doc.setFontSize(10);doc.setFont('helvetica','bold');
+    doc.text('TOTAL TURNO',margin+3,y+5.5);
+    doc.text('$'+total.toLocaleString('es-CL'),margin+colW-3,y+5.5,{align:'right'});
+    y+=12;
   }
 
   // ── FIRMA ──
@@ -980,9 +987,9 @@ function rClScreen_Apertura(){
 
     <div style="background:var(--white);border:1px solid var(--g2);border-radius:12px;padding:13px 14px;margin-bottom:14px">
       <label style="display:block;font-size:10px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Efectivo inicial en caja</label>
-      <div style="display:flex;align-items:center;background:var(--g1);border:1.5px solid var(--g2);border-radius:8px;overflow:hidden">
-        <span style="padding:0 12px;font-size:14px;font-weight:700;color:var(--g4)">$</span>
-        <input id="cajaEfectivo" type="number" inputmode="numeric" placeholder="0" value="${S.caja.efectivoAp??''}" style="flex:1;background:transparent;border:none;padding:10px 12px 10px 0;font-family:var(--fn);font-size:15px;font-weight:700;color:var(--black);outline:none"/>
+      <div style="display:flex;align-items:center;background:#FFFFFF;border:2px solid var(--sep);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+        <span style="padding:0 12px;font-size:14px;font-weight:600;color:var(--label3)">$</span>
+        <input id="cajaEfectivo" type="number" inputmode="numeric" placeholder="0" value="${S.caja.efectivoAp??''}" style="flex:1;background:transparent;border:none;padding:11px 12px 11px 0;font-family:var(--fn);font-size:16px;font-weight:700;color:var(--black);outline:none"/>
       </div>
     </div>
 
@@ -1011,10 +1018,10 @@ function rClScreen_Apertura(){
 function cajaCampos(cj){
   function field(id,label,val){
     return`<div>
-      <label style="display:block;font-size:10px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">${label}</label>
-      <div style="display:flex;align-items:center;background:var(--g1);border:1.5px solid var(--g2);border-radius:8px;overflow:hidden">
-        <span style="padding:0 12px;font-size:13px;font-weight:700;color:var(--g4)">$</span>
-        <input id="${id}" type="number" inputmode="numeric" placeholder="0" value="${val??''}" style="flex:1;background:transparent;border:none;padding:9px 12px 9px 0;font-family:var(--fn);font-size:14px;font-weight:700;color:var(--black);outline:none"/>
+      <label style="display:block;font-size:10px;font-weight:700;color:var(--label2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">${label}</label>
+      <div style="display:flex;align-items:center;background:#FFFFFF;border:2px solid var(--sep);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)">
+        <span style="padding:0 12px;font-size:14px;font-weight:600;color:var(--label3)">$</span>
+        <input id="${id}" type="number" inputmode="numeric" placeholder="0" value="${val??''}" style="flex:1;background:transparent;border:none;padding:11px 12px 11px 0;font-family:var(--fn);font-size:16px;font-weight:700;color:var(--black);outline:none"/>
       </div>
     </div>`;
   }
@@ -1158,9 +1165,11 @@ function rExp(nCrit){
     </label>
   </div>
   <div class="ecard">
-    <h3>Checklist · ${mode}</h3>
-    <p>${clDone}/${allCL.length} tareas completadas.</p>
-    <button class="btn btn-pink" id="bPDF">${I.pdf} Exportar PDF</button>
+    <h3>Checklist</h3>
+    <p>Exporta el PDF con los datos actuales del checklist.</p>
+    <button class="btn btn-pink" id="bPDFap">${I.pdf} PDF Apertura AM</button>
+    <button class="btn btn-outline" id="bPDFamci" style="color:var(--am-ci)">${I.pdf} PDF Cierre AM</button>
+    <button class="btn btn-outline" id="bPDFci">${I.pdf} PDF Cierre PM</button>
   </div>`;
 }
 
@@ -1335,7 +1344,7 @@ function bind(){
       persist();
     },true); // capture phase so it fires before any parent handler
   });
-  const clr=document.getElementById('clReset');if(clr)clr.addEventListener('click',()=>{S.clDone={};S.clPhotos={};S.sig=null;persist();render()});
+  const clr=document.getElementById('clReset');if(clr)clr.addEventListener('click',()=>{S.clDone={};S.clPhotos={};S.sig=null;S.caja={efectivoAp:'',efectivo:'',sobre:'',transferencias:''};persist();render()});
 
   // photos
   document.querySelectorAll('[data-upl]').forEach(inp=>inp.addEventListener('change',e=>{
@@ -1406,35 +1415,30 @@ function bind(){
     else if(S.clScreen==='amCi')S.sent.amCi=true;
     else if(S.clScreen==='pmCi')S.sent.pmCi=true;
     persist();
-    await new Promise(r=>setTimeout(r,100));
     const d=now2.toLocaleDateString('es-CL',{day:'numeric',month:'long'});
     const t=now2.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
     const nombre=S.clName||'';
 
     if(S.clScreen==='amAp'){
-      // Apertura: PDF + WA message with name and efectivo inicial
-      if(!window.jspdf){
-        // jsPDF not loaded yet, just send WA
-        const waMsg2=`*Checklist apertura${nombre?' — '+nombre:''}*\nEfectivo inicial: $${(+cj.efectivoAp||0).toLocaleString('es-CL')}`;
-        openWA(waMsg2);return;
-      }
-      try{
-        const doc=await buildPDF('apertura');
-        const fname='checklist-apertura-'+now2.toISOString().split('T')[0]+'.pdf';
-        const pdfBlob=doc.output('blob');
-        const file=new File([pdfBlob],fname,{type:'application/pdf'});
-        let pdfShared=false;
-        if(navigator.canShare&&navigator.canShare({files:[file]})){
-          try{await navigator.share({files:[file],title:'Checklist Apertura'});pdfShared=true;}
-          catch(e){if(e.name!=='AbortError')doc.save(fname);}
-        } else {doc.save(fname);}
-      }catch(e){console.error(e);toast('Error PDF: '+e.message);}
-      // Always send WA regardless of PDF result
+      // WA first (needs user gesture context — no await before this)
       const waMsg=`*Checklist apertura${nombre?' — '+nombre:''}*\nEfectivo inicial: $${(+cj.efectivoAp||0).toLocaleString('es-CL')}`;
       openWA(waMsg);
+      // PDF after WA (download, no share dialog needed)
+      if(window.jspdf){
+        try{
+          const doc=await buildPDF('apertura');
+          const fname='checklist-apertura-'+now2.toISOString().split('T')[0]+'.pdf';
+          const pdfBlob=doc.output('blob');
+          const file=new File([pdfBlob],fname,{type:'application/pdf'});
+          if(navigator.canShare&&navigator.canShare({files:[file]})){
+            try{await navigator.share({files:[file],title:'Checklist Apertura'});}
+            catch(e){if(e.name!=='AbortError')doc.save(fname);}
+          } else {doc.save(fname);}
+        }catch(e){console.error(e);toast('Error PDF: '+e.message);}
+      }
 
     } else if(S.clScreen==='amCi'){
-      // AM Cierre: solo mensaje WA, sin PDF
+      // AM Cierre: solo WA, sin PDF
       const waMsg=`*AM Cierre${nombre?' — '+nombre:''}*\nEfectivo al iniciar: $${(+cj.efectivoAp||0).toLocaleString('es-CL')}\nEfectivo en caja al cerrar: $${(+cj.efectivo||0).toLocaleString('es-CL')}\nDinero en sobre: $${(+cj.sobre||0).toLocaleString('es-CL')}\nTransferencias recibidas: $${(+cj.transferencias||0).toLocaleString('es-CL')}`;
       openWA(waMsg);
 
@@ -1451,7 +1455,7 @@ function bind(){
           catch(e){if(e.name!=='AbortError')doc.save(fname);}
         } else {doc.save(fname);}
       }catch(e){console.error(e);toast('Error PDF: '+e.message);}
-      // Always send WA
+      // WA
       const waMsg=`*PM Cierre${nombre?' — '+nombre:''}*\nEfectivo al iniciar: $${(+cj.efectivoAp||0).toLocaleString('es-CL')}\nEfectivo en caja al cerrar: $${(+cj.efectivo||0).toLocaleString('es-CL')}\nDinero en sobre: $${(+cj.sobre||0).toLocaleString('es-CL')}\nTransferencias recibidas: $${(+cj.transferencias||0).toLocaleString('es-CL')}`;
       openWA(waMsg);
     }
@@ -1468,7 +1472,9 @@ function bind(){
   const bSave=document.getElementById('bSave');if(bSave)bSave.addEventListener('click',saveDay);
   const bExcel=document.getElementById('bExcel');if(bExcel)bExcel.addEventListener('click',()=>doExcel());
   const bWA=document.getElementById('bWA');if(bWA)bWA.addEventListener('click',waStock);
-  const bPDF=document.getElementById('bPDF');if(bPDF)bPDF.addEventListener('click',()=>doPDF(S.clMode||'apertura'));
+  const bPDFap=document.getElementById('bPDFap');if(bPDFap)bPDFap.addEventListener('click',()=>doPDF('apertura'));
+  const bPDFamci=document.getElementById('bPDFamci');if(bPDFamci)bPDFamci.addEventListener('click',()=>doPDF('cierre'));
+  const bPDFci=document.getElementById('bPDFci');if(bPDFci)bPDFci.addEventListener('click',()=>doPDF('cierre'));
 
   // Apply slide animation to checklist page content
   const clPg=document.getElementById('clPg');
