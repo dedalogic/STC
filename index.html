@@ -47,10 +47,10 @@ body{font-family:var(--fn);background:var(--bg);color:var(--black);max-width:480
 /* PAGE */
 .pg{padding:16px 16px 110px;display:none}
 .pg.on{display:block}
-@keyframes slideIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
-@keyframes slideBack{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:translateX(0)}}
-.cl-screen-enter{animation:slideIn .22s cubic-bezier(.25,.46,.45,.94) forwards}
-.cl-screen-back{animation:slideBack .22s cubic-bezier(.25,.46,.45,.94) forwards}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideBack{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+.cl-screen-enter{animation:slideIn .2s ease forwards}
+.cl-screen-back{animation:slideBack .2s ease forwards}
 
 /* SEARCH */
 .sbar{position:relative;margin-bottom:14px}
@@ -552,7 +552,8 @@ async function buildPDF(mode){
   }
 
   // ── HEADER BAR ──
-  doc.setFillColor(232,50,90);
+  const hdrColor = mode==='apertura'?[29,111,168]:mode==='cierre'&&S.clScreen==='pmCi'?[15,118,110]:[107,33,168];
+  doc.setFillColor(...hdrColor);
   doc.rect(0,0,pageW,20,'F');
   // Title left
   doc.setTextColor(255,255,255);doc.setFontSize(12);doc.setFont('helvetica','bold');
@@ -574,7 +575,7 @@ async function buildPDF(mode){
   y += 3;
   // Bar full width
   doc.setFillColor(230,230,230);doc.roundedRect(margin, y, colW, 3, 1, 1,'F');
-  if(pct>0){doc.setFillColor(232,50,90);doc.roundedRect(margin, y, Math.max(2,colW*pct/100), 3, 1, 1,'F');}
+  if(pct>0){doc.setFillColor(...hdrColor);doc.roundedRect(margin, y, Math.max(2,colW*pct/100), 3, 1, 1,'F');}
   y += 8;
 
   // ── SECTIONS ──
@@ -943,9 +944,9 @@ function rClScreen_Select(){
 
 
 function clBackBtn(){
-  return`<button id="clBack" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:var(--fn);font-size:13px;font-weight:600;color:var(--g4);padding:0;margin-bottom:16px">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:14px;height:14px"><polyline points="15 18 9 12 15 6"/></svg>
-    Turnos
+  return`<button id="clBack" style="display:flex;align-items:center;gap:8px;background:var(--surface);border:none;border-radius:var(--r-sm);padding:11px 14px;margin-bottom:16px;width:100%;cursor:pointer;font-family:var(--fn);font-size:14px;font-weight:600;color:var(--label2);box-shadow:var(--shadow)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:16px;height:16px;flex-shrink:0"><polyline points="15 18 9 12 15 6"/></svg>
+    Volver a turnos
   </button>`;
 }
 
@@ -1097,7 +1098,8 @@ function rClScreen_PmCierre(){
       <span style="font-size:13px;font-weight:600;color:#059669">PM Cierre enviado</span>
     </div>`:''}
 
-    <button class="cl-finish" id="clFinish" style="width:100%;border:none;text-align:left;margin-top:10px;background:linear-gradient(135deg,#0f766e,#0d6060)${!cajaFilled?';opacity:.45;pointer-events:none':''}">
+    <button id="clReset" style="width:100%;background:none;border:none;font-family:var(--fn);font-size:13px;color:var(--label3);padding:10px;margin-top:4px;cursor:pointer">Reiniciar checklist</button>
+    <button class="cl-finish" id="clFinish" style="width:100%;border:none;text-align:left;margin-top:4px;background:linear-gradient(135deg,#0f766e,#0d6060)${!cajaFilled?';opacity:.45;pointer-events:none':''}">
       <div class="cl-finish-text"><h3>${S.sent&&S.sent.pmCi?'Reenviar':'Finalizar PM Cierre'}</h3><p>Enviar PDF y mensaje</p></div>
       <div class="cl-finish-icon">${I.send}</div>
     </button>
@@ -1347,25 +1349,34 @@ function bind(){
   const clr=document.getElementById('clReset');if(clr)clr.addEventListener('click',()=>{S.clDone={};S.clPhotos={};S.sig=null;S.caja={efectivoAp:'',efectivo:'',sobre:'',transferencias:''};persist();render()});
 
   // photos
-  document.querySelectorAll('[data-upl]').forEach(inp=>inp.addEventListener('change',e=>{
-    const id=inp.dataset.upl,file=e.target.files[0];if(!file)return;
-    // Save current sig to S before render destroys the canvas
-    const cv=document.getElementById('sigC');
-    if(cv&&!S.sig){
-      const ctx2=cv.getContext('2d');
-      if(ctx2){const px=ctx2.getImageData(0,0,cv.width,cv.height).data;if(px.some((v,i)=>i%4===3&&v>0))S.sig=cv.toDataURL();}
-    }
-    const r=new FileReader();
-    r.onload=ev=>{
-      if(!S.clPhotos[id])S.clPhotos[id]=[];
-      S.clPhotos[id].push(ev.target.result);
-      persist();
-      render();
-      // restore sig after render recreates canvas
-      if(S.sig){const cv2=document.getElementById('sigC');if(cv2){const ctx3=cv2.getContext('2d');const img=new Image();img.onload=()=>{ctx3.drawImage(img,0,0,cv2.width,cv2.height);cv2.closest('.sig-box').classList.add('drawn');};img.src=S.sig;}}
-    };
-    r.readAsDataURL(file);
-  }));
+  document.querySelectorAll('[data-upl]').forEach(inp=>{
+    // Remove any stale listeners by cloning
+    const fresh=inp.cloneNode(true);
+    inp.parentNode.replaceChild(fresh,inp);
+    fresh.addEventListener('change',function(e){
+      const file=e.target.files&&e.target.files[0];
+      if(!file)return;
+      const id=fresh.dataset.upl;
+      // Save sig before render
+      const cv=document.getElementById('sigC');
+      if(cv){try{const c2=cv.getContext('2d');const px=c2.getImageData(0,0,cv.width,cv.height).data;if(px.some((v,i)=>i%4===3&&v>0))S.sig=cv.toDataURL();}catch(ex){}}
+      const rd=new FileReader();
+      rd.onload=function(ev){
+        if(!ev.target.result)return;
+        if(!S.clPhotos[id])S.clPhotos[id]=[];
+        S.clPhotos[id].push(ev.target.result);
+        persist();
+        render();
+        // Restore sig to new canvas
+        if(S.sig){
+          const cv2=document.getElementById('sigC');
+          if(cv2){const c3=cv2.getContext('2d');const im=new Image();im.onload=()=>{c3.drawImage(im,0,0,cv2.width,cv2.height);const sb=cv2.closest('.sig-box');if(sb)sb.classList.add('drawn');};im.src=S.sig;}
+        }
+      };
+      rd.onerror=()=>toast('Error al cargar la foto');
+      rd.readAsDataURL(file);
+    });
+  });
   document.querySelectorAll('[data-dph]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const id=btn.dataset.dph,idx=+btn.dataset.idx;if(S.clPhotos[id]){S.clPhotos[id].splice(idx,1);if(!S.clPhotos[id].length)delete S.clPhotos[id]}persist();render()}));
 
   // signature
@@ -1443,21 +1454,21 @@ function bind(){
       openWA(waMsg);
 
     } else {
-      // PM Cierre: PDF + WA message
-      if(!window.jspdf){toast('Librería PDF no cargada');return;}
-      try{
-        const doc=await buildPDF('cierre');
-        const fname='checklist-cierre-'+now2.toISOString().split('T')[0]+'.pdf';
-        const pdfBlob=doc.output('blob');
-        const file=new File([pdfBlob],fname,{type:'application/pdf'});
-        if(navigator.canShare&&navigator.canShare({files:[file]})){
-          try{await navigator.share({files:[file],title:'Checklist PM Cierre'});}
-          catch(e){if(e.name!=='AbortError')doc.save(fname);}
-        } else {doc.save(fname);}
-      }catch(e){console.error(e);toast('Error PDF: '+e.message);}
-      // WA
+      // PM Cierre: WA first (must be synchronous from user gesture), then PDF
       const waMsg=`*PM Cierre${nombre?' — '+nombre:''}*\nEfectivo al iniciar: $${(+cj.efectivoAp||0).toLocaleString('es-CL')}\nEfectivo en caja al cerrar: $${(+cj.efectivo||0).toLocaleString('es-CL')}\nDinero en sobre: $${(+cj.sobre||0).toLocaleString('es-CL')}\nTransferencias recibidas: $${(+cj.transferencias||0).toLocaleString('es-CL')}`;
       openWA(waMsg);
+      if(window.jspdf){
+        try{
+          const doc=await buildPDF('cierre');
+          const fname='checklist-cierre-'+now2.toISOString().split('T')[0]+'.pdf';
+          const pdfBlob=doc.output('blob');
+          const file=new File([pdfBlob],fname,{type:'application/pdf'});
+          if(navigator.canShare&&navigator.canShare({files:[file]})){
+            try{await navigator.share({files:[file],title:'Checklist PM Cierre'});}
+            catch(e){if(e.name!=='AbortError')doc.save(fname);}
+          } else {doc.save(fname);}
+        }catch(e){console.error(e);toast('Error PDF: '+e.message);}
+      }
     }
   });
 
@@ -1476,14 +1487,16 @@ function bind(){
   const bPDFamci=document.getElementById('bPDFamci');if(bPDFamci)bPDFamci.addEventListener('click',()=>doPDF('cierre'));
   const bPDFci=document.getElementById('bPDFci');if(bPDFci)bPDFci.addEventListener('click',()=>doPDF('cierre'));
 
-  // Apply slide animation to checklist page content
-  const clPg=document.getElementById('clPg');
-  if(clPg&&tab==='check'&&S.clScreen!=='select'){
-    const inner=clPg.querySelector('div');
-    if(inner){
-      inner.classList.remove('cl-screen-enter','cl-screen-back');
-      void inner.offsetWidth; // force reflow
-      inner.classList.add(clNavDir==='back'?'cl-screen-back':'cl-screen-enter');
+  // Slide animation
+  if(tab==='check'&&S.clScreen!=='select'){
+    const clPg2=document.getElementById('clPg');
+    if(clPg2){
+      const inner=clPg2.querySelector('div');
+      if(inner){
+        const cls=clNavDir==='back'?'cl-screen-back':'cl-screen-enter';
+        inner.classList.remove('cl-screen-enter','cl-screen-back');
+        requestAnimationFrame(()=>inner.classList.add(cls));
+      }
     }
   }
 }
