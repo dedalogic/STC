@@ -404,12 +404,22 @@ const CL_CIERRE=[
 
 // ── STATE ─────────────────────────────────────────────────────
 function loadS(){
-  try{const s=localStorage.getItem('cajasf_v11');if(s)return JSON.parse(s);}catch(e){}
+  try{
+    const s=localStorage.getItem('cajasf_v11');
+    if(s){
+      const p=JSON.parse(s);
+      const today=new Date().toISOString().split('T')[0];
+      if(p.sentDate!==today){p.sent={amAp:false,amCi:false,pmCi:false};p.sentDate=today;}
+      p.clScreen='select';
+      return p;
+    }
+  }catch(e){}
+  const today=new Date().toISOString().split('T')[0];
   return{counts:{},prov:{},desc:{},collapsed:{},history:[],
          clMode:'apertura',clName:'',clDone:{},clPhotos:{},clCollapsed:{},sig:null,
          onboarded:false,hideTips:false,guideSeen:{stock:false,check:false,exp:false},
          caja:{efectivoAp:'',efectivo:'',sobre:'',transferencias:''},
-         clScreen:'select',sent:{amAp:false,amCi:false,pmCi:false}};
+         clScreen:'select',sentDate:today,sent:{amAp:false,amCi:false,pmCi:false}};
 }
 let S=loadS();
 function persist(){localStorage.setItem('cajasf_v11',JSON.stringify(S))}
@@ -1014,13 +1024,10 @@ function rClScreen_Apertura(){
       <div class="sig-box${S.sig?' drawn':''}"><canvas id="sigC" width="600" height="200"></canvas></div>
     </div>
 
-    ${S.sent&&S.sent.amAp?`<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px 14px;margin-top:10px;display:flex;align-items:center;gap:10px">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" style="width:18px;height:18px;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>
-      <span style="font-size:13px;font-weight:600;color:#059669">Apertura enviada</span>
-    </div>`:''}
+
 
     <button class="cl-finish" id="clFinish" style="width:100%;border:none;text-align:left;margin-top:10px;background:linear-gradient(135deg,#1d6fa8,#155e89)">
-      <div class="cl-finish-text"><h3>${S.sent&&S.sent.amAp?'Reenviar apertura':'Finalizar apertura'}</h3><p>Enviar PDF y mensaje</p></div>
+      <div class="cl-finish-text"><h3>Enviar apertura</h3><p>Enviar PDF y mensaje</p></div>
       <div class="cl-finish-icon">${I.send}</div>
     </button>
   </div>`;
@@ -1059,12 +1066,9 @@ function rClScreen_AmCierre(){
         ${cajaCampos(cj)}
       </div>
     </div>
-    ${S.sent&&S.sent.amCi?`<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" style="width:18px;height:18px;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>
-      <span style="font-size:13px;font-weight:600;color:#059669">AM Cierre enviado</span>
-    </div>`:''}
+
     <button class="cl-finish" id="clFinish" style="width:100%;border:none;text-align:left;background:linear-gradient(135deg,#6b21a8,#4c1d95)${!filled?';opacity:.45;pointer-events:none':''}">
-      <div class="cl-finish-text"><h3>${S.sent&&S.sent.amCi?'Reenviar':'Enviar cierre AM'}</h3><p>Mensaje WhatsApp</p></div>
+      <div class="cl-finish-text"><h3>Enviar cierre AM</h3><p>Mensaje WhatsApp</p></div>
       <div class="cl-finish-icon">${I.send}</div>
     </button>
     <button class="cl-reset-btn">Reiniciar checklist</button>
@@ -1113,14 +1117,11 @@ function rClScreen_PmCierre(){
       <div class="sig-box${S.sig?' drawn':''}"><canvas id="sigC" width="600" height="200"></canvas></div>
     </div>
 
-    ${S.sent&&S.sent.pmCi?`<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px 14px;margin-top:10px;display:flex;align-items:center;gap:10px">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" style="width:18px;height:18px;flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>
-      <span style="font-size:13px;font-weight:600;color:#059669">PM Cierre enviado</span>
-    </div>`:''}
+
 
     <button class="cl-reset-btn">Reiniciar checklist</button>
     <button class="cl-finish" id="clFinish" style="width:100%;border:none;text-align:left;margin-top:4px;background:linear-gradient(135deg,#0f766e,#0d6060)${!cajaFilled?';opacity:.45;pointer-events:none':''}">
-      <div class="cl-finish-text"><h3>${S.sent&&S.sent.pmCi?'Reenviar':'Finalizar PM Cierre'}</h3><p>Enviar PDF y mensaje</p></div>
+      <div class="cl-finish-text"><h3>Enviar PM Cierre</h3><p>Enviar PDF y mensaje</p></div>
       <div class="cl-finish-icon">${I.send}</div>
     </button>
   </div></div>`;
@@ -1311,7 +1312,7 @@ function bind(){
   if(menuReset)menuReset.addEventListener('click',()=>{if(confirm('¿Reiniciar todo el conteo?')){S.counts={};persist();showMenu=false;showMenuNameEdit=false;toast('Conteo reiniciado');render()}});
 
   // tabs
-  document.querySelectorAll('[data-tab]').forEach(el=>el.addEventListener('click',()=>{tab=el.dataset.tab;search='';render();maybeStartGuide()}));
+  document.querySelectorAll('[data-tab]').forEach(el=>el.addEventListener('click',()=>{tab=el.dataset.tab;search='';if(tab==='check'){S.clScreen='select';persist();}render();maybeStartGuide()}));
 
   // search
   const si=document.getElementById('si');
@@ -1466,6 +1467,7 @@ function bind(){
     if(S.clScreen==='amAp')S.sent.amAp=true;
     else if(S.clScreen==='amCi')S.sent.amCi=true;
     else if(S.clScreen==='pmCi')S.sent.pmCi=true;
+    S.sentDate=new Date().toISOString().split('T')[0];
     persist();
     const d=now2.toLocaleDateString('es-CL',{day:'numeric',month:'long'});
     const t=now2.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
